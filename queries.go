@@ -23,14 +23,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/jinzhu/now"
-
 	"github.com/rs/zerolog/log"
-)
-
-const (
-	turnipSellDay  = time.Sunday
-	timeFormatAMPM = "2006-01-02 PM"
 )
 
 var (
@@ -127,25 +120,10 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 	return user, group, nil
 }
 
-func (d *Database) getNowConfig(group *Group) (*now.Config, error) {
-	// Create now config with group timezone
-	location, err := time.LoadLocation(group.TZ)
-	if err != nil {
-		log.Error().Str("module", "database").Err(err).Msg("error loading timezone")
-		return nil, err
-	}
-
-	return &now.Config{
-		WeekStartDay: turnipSellDay,
-		TimeLocation: location,
-		TimeFormats:  []string{timeFormatAMPM},
-	}, nil
-}
-
 // getThisWeekOwned returns owned turnips by the user this week
 func (d *Database) getThisWeekOwned(u *User, g *Group) (*Owned, error) {
 	// Get now config with group timezone
-	nowCfg, err := d.getNowConfig(g)
+	nowCfg, err := g.NowConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +168,7 @@ func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells
 	}
 
 	// Get now config with group timezone
-	nowCfg, err := d.getNowConfig(group)
+	nowCfg, err := group.NowConfig()
 	if err != nil {
 		return false, 0, 0, err
 	}
@@ -227,7 +205,7 @@ func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells
 // getUserSellPrice gets sell price at Nook's Cranny of an User in a Group at a given time
 func (d *Database) getUserSellPrice(u *User, g *Group, t time.Time) (*Price, error) {
 	// Get now config with group timezone
-	nowCfg, err := d.getNowConfig(g)
+	nowCfg, err := g.NowConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +287,7 @@ func (d *Database) SaveSellPrice(u *tb.User, c *tb.Chat, bells uint32, dateStr s
 	}
 
 	// Get now config with group timezone
-	nowCfg, err := d.getNowConfig(group)
+	nowCfg, err := group.NowConfig()
 	if err != nil {
 		return false, 0, "", err
 	}
@@ -333,7 +311,7 @@ func (d *Database) SaveCurrentSellPrice(u *tb.User, c *tb.Chat, bells uint32) (b
 	}
 
 	// Get now config with group timezone
-	nowCfg, err := d.getNowConfig(group)
+	nowCfg, err := group.NowConfig()
 	if err != nil {
 		return false, 0, "", err
 	}

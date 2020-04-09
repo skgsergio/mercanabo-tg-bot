@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+
+	"github.com/jinzhu/now"
 )
 
 // Group represents a Telegram group
@@ -26,6 +28,21 @@ type Group struct {
 	ID    int64  `gorm:"PRIMARY_KEY;NOT NULL"`
 	Title string `gorm:"NOT NULL"`
 	TZ    string `gorm:"NOT NULL"`
+}
+
+// NowConfig returns a now.Config with the group timezone
+func (g *Group) NowConfig() (*now.Config, error) {
+	location, err := time.LoadLocation(g.TZ)
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error loading timezone")
+		return nil, err
+	}
+
+	return &now.Config{
+		WeekStartDay: turnipSellDay,
+		TimeLocation: location,
+		TimeFormats:  []string{timeFormatAMPM},
+	}, nil
 }
 
 // User represents a Telegram user

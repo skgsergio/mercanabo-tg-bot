@@ -24,6 +24,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	turnipSellDay  = time.Sunday
+	timeFormatAMPM = "2006-01-02 PM"
+)
+
 var (
 	defaultTZ   string    = "UTC"
 	bot         *Telegram = nil
