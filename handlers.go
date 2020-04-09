@@ -103,7 +103,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	}
 
 	// Store user turnips
-	new, oldUnits, oldBells, err := db.SaveThisWeekTurnips(m.Sender, m.Chat, units, bells)
+	new, oldUnits, oldBells, err := db.SaveThisWeekOwned(m.Sender, m.Chat, units, bells)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return

@@ -47,9 +47,9 @@ type Price struct {
 	Date    time.Time `gorm:"INDEX;NOT NULL"`
 }
 
-// Turnip represents how many turnips owns an User in a Group in a given date
+// Owned represents how many turnips owns an User in a Group in a given date
 // An User has to record in each Group how many turnips owns to handle correctly Groups with differnt time zones.
-type Turnip struct {
+type Owned struct {
 	ID      uint64    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;NOT NULL"`
 	GroupID int64     `gorm:"INDEX;NOT NULL"`
 	Group   Group     `gorm:"FOREIGNKEY:GroupID"`
@@ -68,7 +68,7 @@ func (d *Database) SetupDB() {
 		&Group{},
 		&User{},
 		&Price{},
-		&Turnip{},
+		&Owned{},
 	)
 
 	// Add the FKs
@@ -76,7 +76,7 @@ func (d *Database) SetupDB() {
 	priceModel.AddForeignKey("group_id", "groups(id)", "CASCADE", "CASCADE")
 	priceModel.AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 
-	turnipModel := d.DB.Model(&Turnip{})
-	turnipModel.AddForeignKey("group_id", "groups(id)", "CASCADE", "CASCADE")
-	turnipModel.AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	ownedModel := d.DB.Model(&Owned{})
+	ownedModel.AddForeignKey("group_id", "groups(id)", "CASCADE", "CASCADE")
+	ownedModel.AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 }

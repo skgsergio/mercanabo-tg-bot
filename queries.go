@@ -142,8 +142,8 @@ func (d *Database) getNowConfig(group *Group) (*now.Config, error) {
 	}, nil
 }
 
-// getThisWeekTurnips returns turnip turnips by the user this week
-func (d *Database) getThisWeekTurnips(u *User, g *Group) (*Turnip, error) {
+// getThisWeekOwned returns owned turnips by the user this week
+func (d *Database) getThisWeekOwned(u *User, g *Group) (*Owned, error) {
 	// Get now config with group timezone
 	nowCfg, err := d.getNowConfig(g)
 	if err != nil {
@@ -153,36 +153,36 @@ func (d *Database) getThisWeekTurnips(u *User, g *Group) (*Turnip, error) {
 	bowDate := nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
 	eowDate := nowCfg.With(bowDate).EndOfWeek()
 
-	// Get this week turnip
-	turnip := &Turnip{}
+	// Get this week owned
+	owned := &Owned{}
 
 	err = d.DB.Where("user_id = ? AND group_id = ? AND date >= ? AND date <= ?",
 		u.ID,
 		g.ID,
 		bowDate,
 		eowDate,
-	).First(&turnip).Error
+	).First(&owned).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		log.Error().Str("module", "database").Err(err).Msg("error getting turnip")
+		log.Error().Str("module", "database").Err(err).Msg("error getting owned")
 		return nil, err
 	}
 
-	return turnip, nil
+	return owned, nil
 }
 
-// GetThisWeekTurnips returns turnip turnips by the user this week
-func (d *Database) GetThisWeekTurnips(u *tb.User, c *tb.Chat) (*Turnip, error) {
+// GetThisWeekOwned returns owned turnips by the user this week
+func (d *Database) GetThisWeekOwned(u *tb.User, c *tb.Chat) (*Owned, error) {
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
 		return nil, err
 	}
 
-	return d.getThisWeekTurnips(user, group)
+	return d.getThisWeekOwned(user, group)
 }
 
-// SaveThisWeekTurnips sets turnip turnips by the user this week
-func (d *Database) SaveThisWeekTurnips(u *tb.User, c *tb.Chat, units uint32, bells uint32) (bool, uint32, uint32, error) {
+// SaveThisWeekOwned sets owned turnips by the user this week
+func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells uint32) (bool, uint32, uint32, error) {
 	// Get user and group
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
@@ -195,30 +195,30 @@ func (d *Database) SaveThisWeekTurnips(u *tb.User, c *tb.Chat, units uint32, bel
 		return false, 0, 0, err
 	}
 
-	// Get current week turnips if exists
-	turnip, err := db.getThisWeekTurnips(user, group)
+	// Get current week owneds if exists
+	owned, err := db.getThisWeekOwned(user, group)
 	if err != nil {
 		return false, 0, 0, err
 	}
 
-	new := db.DB.NewRecord(turnip)
-	oldUnits := turnip.Units
-	oldBells := turnip.Bells
+	new := db.DB.NewRecord(owned)
+	oldUnits := owned.Units
+	oldBells := owned.Bells
 
-	turnip.UserID = user.ID
-	turnip.GroupID = group.ID
-	turnip.Units = units
-	turnip.Bells = bells
-	turnip.Date = nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
+	owned.UserID = user.ID
+	owned.GroupID = group.ID
+	owned.Units = units
+	owned.Bells = bells
+	owned.Date = nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
 
 	if new {
-		err = d.DB.Create(&turnip).Error
+		err = d.DB.Create(&owned).Error
 	} else {
-		err = d.DB.Save(&turnip).Error
+		err = d.DB.Save(&owned).Error
 	}
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving turnip")
+		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving owned")
 	}
 
 	return new, oldUnits, oldBells, err
