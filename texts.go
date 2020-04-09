@@ -58,6 +58,12 @@ type Texts struct {
 		Params string `json:"params"`
 		Desc   string `json:"desc"`
 	} `json:"changetz"`
+
+	List struct {
+		Cmd   string `json:"cmd"`
+		Desc  string `json:"desc"`
+		Reply string `json:"reply"`
+	} `json:"list"`
 }
 
 // LoadTexts load a language texts json file and returns it as Texts

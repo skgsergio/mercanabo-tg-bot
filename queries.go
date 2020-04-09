@@ -31,21 +31,18 @@ var (
 	ErrDateParse = errors.New("date parse failed")
 )
 
-// GetGroup returns the group updating the its data if changed, if doesnt exist just creates and returns it
-func (d *Database) GetGroup(c *tb.Chat) (*Group, bool, error) {
+// GetGroup returns the group entity given a telegram chat entity updating the its data if changed, if doesnt exist just creates and returns it
+func (d *Database) GetGroup(c *tb.Chat) (*Group, error) {
 	group := &Group{}
-	new := false
 
 	err := d.DB.Where(&Group{ID: c.ID}).First(&group).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting group")
-		return nil, new, err
+		return nil, err
 	}
 
 	if d.DB.NewRecord(group) {
-		new = true
-
 		group.ID = c.ID
 		group.Title = c.Title
 		group.TZ = defaultTZ
@@ -57,10 +54,10 @@ func (d *Database) GetGroup(c *tb.Chat) (*Group, bool, error) {
 		d.DB.Save(&group)
 	}
 
-	return group, new, nil
+	return group, nil
 }
 
-// GetUser returns the user updating the its data if changed, if doesnt exist just creates and returns it
+// GetUser returns the user entity given a telegram user entity updating the its data if changed, if doesnt exist just creates and returns it
 func (d *Database) GetUser(u *tb.User) (*User, error) {
 	user := &User{}
 
@@ -103,7 +100,7 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 	return user, nil
 }
 
-// GetUserAndGroup returns the
+// GetUserAndGroup returns the user and group database entities given the user and chat telegram entities
 func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error) {
 	// Get user
 	user, err := d.GetUser(u)
@@ -112,7 +109,7 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 	}
 
 	// Get group
-	group, _, err := d.GetGroup(c)
+	group, err := d.GetGroup(c)
 	if err != nil {
 		return user, nil, err
 	}
@@ -239,14 +236,42 @@ func (d *Database) getUserSellPrice(u *User, g *Group, t time.Time) (*Price, err
 	return price, nil
 }
 
-// GetSellPrice gets sell price at Nook's Cranny at a given time
-func (d *Database) GetSellPrice(u *tb.User, c *tb.Chat, t *time.Time) (*Price, error) {
-	return nil, nil
-}
+// GetCurrentSellPrices gets current sell price at Nook's Cranny
+func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, error) {
+	// Get group
+	group, err := d.GetGroup(c)
+	if err != nil {
+		return nil, err
+	}
 
-// GetCurrentSellPrice gets current sell price at Nook's Cranny
-func (d *Database) GetCurrentSellPrice(u *tb.User, c *tb.Chat) (*Price, error) {
-	return nil, nil
+	// Get now config with group timezone
+	nowCfg, err := group.NowConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the correct date
+	reqDate := time.Now().In(nowCfg.TimeLocation)
+
+	amDate := nowCfg.With(reqDate).BeginningOfDay()
+	pmDate := amDate.Add(time.Hour * 12)
+
+	if reqDate.Before(pmDate) {
+		reqDate = amDate
+	} else {
+		reqDate = pmDate
+	}
+
+	// Query current group prices
+	prices := []*Price{}
+
+	err = d.DB.Set("gorm:auto_preload", true).Where("group_id = ? AND date = ?", group.ID, reqDate).Order("bells DESC").Find(&prices).Error
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error getting prices")
+		return nil, err
+	}
+
+	return prices, nil
 }
 
 // saveSellPrice sets sell price at Nook's Cranny at a given time

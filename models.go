@@ -53,6 +53,17 @@ type User struct {
 	Username  string `gorm:"NOT NULL"`
 }
 
+// Name returns the full name of the User
+func (u *User) Name() string {
+	name := u.FirstName
+
+	if u.LastName != "" {
+		name += " " + u.LastName
+	}
+
+	return name
+}
+
 // Price is a price that a User recorded in a Group
 type Price struct {
 	ID      uint64    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;NOT NULL"`

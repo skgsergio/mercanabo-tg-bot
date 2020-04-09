@@ -30,6 +30,7 @@
   },
   "list": {
     "cmd": "lista",
-    "desc": "Lista el top 10 de precios actuales del grupo."
+    "desc": "Lista el top 10 de precios actuales del grupo.",
+    "reply": "Precios de venta actuales:"
   }
 }

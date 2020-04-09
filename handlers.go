@@ -40,7 +40,7 @@ func (t *Telegram) handleAddedToGroup(m *tb.Message) {
 	t.send(m.Chat, texts.JoinText)
 
 	// Register the group in the DB
-	_, _, err := db.GetGroup(m.Chat)
+	_, err := db.GetGroup(m.Chat)
 	if err != nil {
 		log.Error().Str("module", "telegram").Err(err).Msg("error getting or creating group")
 	}
@@ -63,6 +63,7 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 	helpLines := []string{
 		"Estos son los comandos disponibles:",
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Help.Cmd, texts.Help.Desc),
+		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.List.Cmd, texts.List.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, texts.ChangeTZ.Desc),
@@ -174,4 +175,40 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	} else {
 		t.reply(m, fmt.Sprintf(texts.Sell.Changed, bells, date, oldBells))
 	}
+}
+
+// handleListCmd triggers when the list cmd is sent to a group, if sent in private the user will be warned
+func (t *Telegram) handleListCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	prices, err := db.GetCurrentSellPrices(m.Chat)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	reply := texts.List.Reply
+	for _, price := range prices {
+		reply += fmt.Sprintf("\n%s", price.User.Name())
+
+		if price.User.Username != "" {
+			reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
+		}
+
+		reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.BellsName)
+	}
+
+	t.reply(m, reply, &tb.SendOptions{
+		ParseMode: tb.ModeHTML,
+	})
 }
