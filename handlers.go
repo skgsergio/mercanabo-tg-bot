@@ -91,14 +91,14 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 2 {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Buy.Cmd, texts.Buy.Params))
+		t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
 		return
 	}
 
 	units, erru := parseUint32(parameters[0])
 	bells, errb := parseUint32(parameters[1])
 	if erru != nil || errb != nil {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Buy.Cmd, texts.Buy.Params))
+		t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
 		return
 	}
 
@@ -132,20 +132,41 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
-	if len(parameters) != 1 {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Sell.Cmd, texts.Sell.Params))
+	if len(parameters) != 1 && len(parameters) != 3 {
+		t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Sell.Params))
 		return
 	}
 
 	bells, err := parseUint32(parameters[0])
 	if err != nil {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Sell.Cmd, texts.Sell.Params))
+		t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Sell.Params))
 		return
 	}
 
-	new, oldBells, date, err := db.SaveCurrentSellPrice(m.Sender, m.Chat, bells)
-	if err != nil {
-		t.reply(m, texts.InternalError)
+	// Save the price
+	var (
+		new      bool
+		oldBells uint32
+		date     string
+	)
+
+	if len(parameters) == 1 {
+		new, oldBells, date, err = db.SaveCurrentSellPrice(m.Sender, m.Chat, bells)
+		if err != nil {
+			t.reply(m, texts.InternalError)
+			return
+		}
+	} else {
+		new, oldBells, date, err = db.SaveSellPrice(m.Sender, m.Chat, bells, strings.Join(parameters[1:], " "))
+		if err != nil {
+			if err == ErrDateParse {
+				t.reply(m, fmt.Sprintf(texts.Sell.InvalidDate, strings.Join(parameters[1:], " ")))
+				return
+			}
+
+			t.reply(m, texts.InternalError)
+			return
+		}
 	}
 
 	if new {

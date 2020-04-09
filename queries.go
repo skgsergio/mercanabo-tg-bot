@@ -16,6 +16,7 @@
 package main
 
 import (
+	"errors"
 	"time"
 
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -28,7 +29,13 @@ import (
 )
 
 const (
-	turnipSellDay = time.Sunday
+	turnipSellDay  = time.Sunday
+	timeFormatAMPM = "2006-01-02 PM"
+)
+
+var (
+	// ErrDateParse is returned when an user input date failed to be parsed
+	ErrDateParse = errors.New("date parse failed")
 )
 
 // GetGroup returns the group updating the its data if changed, if doesnt exist just creates and returns it
@@ -131,6 +138,7 @@ func (d *Database) getNowConfig(group *Group) (*now.Config, error) {
 	return &now.Config{
 		WeekStartDay: turnipSellDay,
 		TimeLocation: location,
+		TimeFormats:  []string{timeFormatAMPM},
 	}, nil
 }
 
@@ -263,9 +271,57 @@ func (d *Database) GetCurrentSellPrice(u *tb.User, c *tb.Chat) (*Price, error) {
 	return nil, nil
 }
 
+// saveSellPrice sets sell price at Nook's Cranny at a given time
+func (d *Database) saveSellPrice(u *User, g *Group, bells uint32, t time.Time) (bool, uint32, string, error) {
+	// Save price
+	price, err := d.getUserSellPrice(u, g, t)
+	if err != nil {
+		return false, 0, "", err
+	}
+
+	new := db.DB.NewRecord(price)
+	oldBells := price.Bells
+
+	price.UserID = u.ID
+	price.GroupID = g.ID
+	price.Bells = bells
+	price.Date = t
+
+	if new {
+		err = d.DB.Create(&price).Error
+	} else {
+		err = d.DB.Save(&price).Error
+	}
+
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving price")
+	}
+
+	return new, oldBells, t.Format(timeFormatAMPM), nil
+}
+
 // SaveSellPrice sets sell price at Nook's Cranny at a given time
-func (d *Database) SaveSellPrice(u *tb.User, c *tb.Chat, bells uint32, t *time.Time) (bool, uint32, string, error) {
-	return false, 0, "", nil
+func (d *Database) SaveSellPrice(u *tb.User, c *tb.Chat, bells uint32, dateStr string) (bool, uint32, string, error) {
+	// Get user and group
+	user, group, err := d.GetUserAndGroup(u, c)
+	if err != nil {
+		return false, 0, "", err
+	}
+
+	// Get now config with group timezone
+	nowCfg, err := d.getNowConfig(group)
+	if err != nil {
+		return false, 0, "", err
+	}
+
+	// Parse date
+	date, err := nowCfg.Parse(dateStr)
+	if err != nil {
+		return false, 0, "", ErrDateParse
+	}
+
+	// Save price
+	return d.saveSellPrice(user, group, bells, date)
 }
 
 // SaveCurrentSellPrice sets current sell price at Nook's Cranny
@@ -282,7 +338,7 @@ func (d *Database) SaveCurrentSellPrice(u *tb.User, c *tb.Chat, bells uint32) (b
 		return false, 0, "", err
 	}
 
-	// Get the correct date
+	// Get current date and set it to 00:00:00 (AM) or 12:00:00 (PM)
 	currentDate := time.Now().In(nowCfg.TimeLocation)
 
 	amDate := nowCfg.With(currentDate).BeginningOfDay()
@@ -295,28 +351,5 @@ func (d *Database) SaveCurrentSellPrice(u *tb.User, c *tb.Chat, bells uint32) (b
 	}
 
 	// Save price
-	price, err := d.getUserSellPrice(user, group, currentDate)
-	if err != nil {
-		return false, 0, "", err
-	}
-
-	new := db.DB.NewRecord(price)
-	oldBells := price.Bells
-
-	price.UserID = user.ID
-	price.GroupID = group.ID
-	price.Bells = bells
-	price.Date = currentDate
-
-	if new {
-		err = d.DB.Create(&price).Error
-	} else {
-		err = d.DB.Save(&price).Error
-	}
-
-	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving price")
-	}
-
-	return new, oldBells, currentDate.Format("2006-01-02 PM"), nil
+	return d.saveSellPrice(user, group, bells, currentDate)
 }

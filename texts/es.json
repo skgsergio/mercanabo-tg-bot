@@ -17,15 +17,16 @@
   },
   "sell": {
     "cmd": "venta",
-    "params": "[precio]",
-    "desc": "Indica el precio actual de compra en Mini Nook.",
+    "params": "[precio] [fecha opcional: YYYY-MM-DD AM/PM]",
+    "desc": "Indica el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
     "saved": "El precio de venta en tu isla es de %v bayas con fecha %v.",
-    "changed": "¡Lo cambio! El precio de venta en tu isla es de %v bayas con fecha %v en vez de %v bayas."
+    "changed": "¡Lo cambio! El precio de venta en tu isla es de %v bayas con fecha %v en vez de %v bayas.",
+    "invalid_date": "La fecha que has introducido no cumple el formato YYYY-MM-DD AM/PM: %v"
   },
   "changetz": {
     "cmd": "horario",
     "params": "[zona horaria]",
-    "desc": "Indica la zona horaria del grupo (solo administradores, ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
+    "desc": "Indica la zona horaria del grupo, solo para administradores del grupo. (Ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
   },
   "list": {
     "cmd": "lista",

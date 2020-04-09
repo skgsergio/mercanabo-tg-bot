@@ -45,11 +45,12 @@ type Texts struct {
 	} `json:"buy"`
 
 	Sell struct {
-		Cmd     string `json:"cmd"`
-		Params  string `json:"params"`
-		Desc    string `json:"desc"`
-		Saved   string `json:"saved"`
-		Changed string `json:"changed"`
+		Cmd         string `json:"cmd"`
+		Params      string `json:"params"`
+		Desc        string `json:"desc"`
+		Saved       string `json:"saved"`
+		Changed     string `json:"changed"`
+		InvalidDate string `json:"invalid_date"`
 	} `json:"sell"`
 
 	ChangeTZ struct {
