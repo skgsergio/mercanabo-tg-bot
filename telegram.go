@@ -83,6 +83,17 @@ func (t *Telegram) send(to tb.Recipient, what interface{}, options ...interface{
 		try int         = 1
 	)
 
+	hasParseMode := false
+	for _, opt := range options {
+		if _, hasParseMode = opt.(tb.ParseMode); hasParseMode {
+			break
+		}
+	}
+
+	if !hasParseMode {
+		options = append(options, tb.ModeHTML)
+	}
+
 	for {
 		msg, err = t.bot.Send(to, what, options...)
 
@@ -111,6 +122,17 @@ func (t *Telegram) reply(to *tb.Message, what interface{}, options ...interface{
 		err error       = nil
 		try int         = 1
 	)
+
+	hasParseMode := false
+	for _, opt := range options {
+		if _, hasParseMode = opt.(tb.ParseMode); hasParseMode {
+			break
+		}
+	}
+
+	if !hasParseMode {
+		options = append(options, tb.ModeHTML)
+	}
 
 	for {
 		_, err = t.bot.Reply(to, what, options...)

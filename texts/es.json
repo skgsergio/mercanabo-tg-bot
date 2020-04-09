@@ -12,16 +12,16 @@
     "cmd": "compra",
     "params": "[cantidad] [precio]",
     "desc": "Indica el número de nabos y el precio al que has comprado.",
-    "saved": "Has comprado %v nabos a %v bayas/unidad.",
-    "changed": "¡Lo cambio! Has comprado %v nabos a %v bayas/unidad en vez de %v nabos a %v bayas/unidad."
+    "saved": "Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
+    "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad."
   },
   "sell": {
     "cmd": "venta",
     "params": "[precio] [fecha opcional: YYYY-MM-DD AM/PM]",
     "desc": "Indica el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
-    "saved": "El precio de venta en tu isla es de %v bayas con fecha %v.",
-    "changed": "¡Lo cambio! El precio de venta en tu isla es de %v bayas con fecha %v en vez de %v bayas.",
-    "invalid_date": "La fecha que has introducido no cumple el formato YYYY-MM-DD AM/PM: %v"
+    "saved": "El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b>.",
+    "changed": "¡Lo cambio! El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b> en vez de <b>%v</b> bayas.",
+    "invalid_date": "La fecha que has introducido no cumple el formato <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>"
   },
   "changetz": {
     "cmd": "horario",
@@ -31,7 +31,7 @@
   "list": {
     "cmd": "lista",
     "desc": "Lista el top 10 de precios actuales del grupo.",
-    "reply_owned": "Esta semana compraste %v nabos a %v bayas/unidad.",
-    "reply_prices": "Precios de venta con fecha %v:"
+    "reply_owned": "Esta semana compraste <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
+    "reply_prices": "Precios de venta con fecha <b>%v</b>:"
   }
 }

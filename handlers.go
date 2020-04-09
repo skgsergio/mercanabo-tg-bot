@@ -69,10 +69,7 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, texts.ChangeTZ.Desc),
 	}
 
-	t.reply(m, strings.Join(helpLines, "\n"), &tb.SendOptions{
-		DisableWebPagePreview: true,
-		ParseMode:             tb.ModeHTML,
-	})
+	t.reply(m, strings.Join(helpLines, "\n"), tb.NoPreview)
 }
 
 // handleBuyCmd triggers when the buy cmd is sent to a group, if sent in private the user will be warned
@@ -234,7 +231,5 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 		}
 	}
 
-	t.reply(m, reply, &tb.SendOptions{
-		ParseMode: tb.ModeHTML,
-	})
+	t.reply(m, reply)
 }
