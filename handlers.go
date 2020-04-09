@@ -227,7 +227,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 				reply += " 📉 "
 			}
 
-			reply += fmt.Sprintf("%v %s", profits, texts.BellsName)
+			reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.BellsName)
 		}
 	}
 
