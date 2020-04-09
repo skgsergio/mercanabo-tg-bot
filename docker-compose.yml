@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  bot:
+    build: .
+    command: ['/bin/sh', '-c', 'while ! pg_isready -h $${POSTGRES_HOST} -p $${POSTGRES_PORT} -U $${POSTGRES_USER}; do sleep 5; done && ./mercanabo']
+    depends_on:
+      - database
+    environment:
+      - MERCANABO_TOKEN
+      - MERCANABO_DEFAULT_TZ
+      - MERCANABO_LANG
+      - MERCANABO_DEBUG
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSLMODE=disable
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+  database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    volumes:
+      - postgresql:/var/lib/postgresql/data
+
+volumes:
+  postgresql: {}

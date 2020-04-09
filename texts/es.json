@@ -1,0 +1,17 @@
+{
+  "group_only": "Este bot solo puede ser usado en grupos.",
+  "join_text": "MercaNabo ahora está disponible en este grupo.",
+  "internal_error": "¡Ups! Se ha producido un error interno del bot.",
+  "invalid_parameters": "Parametros inválidos para el comando:",
+  "buy_cmd": "compra",
+  "buy_desc": "[cantidad] [precio] - Indica el número de nabos y el precio al que has comprado.",
+  "buy_saved": "Has comprado %v nabos a %v bayas/unidad.",
+  "buy_changed": "¡Lo cambio! Has comprado %v nabos a %v bayas/unidad en vez de %v nabos a %v bayas/unidad.",
+  "sell_cmd": "venta",
+  "sell_desc": "[precio] - Indica el precio actual de compra en Mini Nook.",
+  "sell_saved": "El precio de venta en tu isla es de %v bayas con fecha %v.",
+  "sell_changed": "¡Lo cambio! El precio de venta en tu isla es de %v bayas con fecha %v en vez de %v bayas.",
+  "tz_cmd": "zonahoraria",
+  "tz_desc": "[zona horaria] - Indica la zona horaria del grupo (solo administradores, ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)",
+  "bells_name": "bayas"
+}
