@@ -60,9 +60,10 @@ type Texts struct {
 	} `json:"changetz"`
 
 	List struct {
-		Cmd   string `json:"cmd"`
-		Desc  string `json:"desc"`
-		Reply string `json:"reply"`
+		Cmd         string `json:"cmd"`
+		Desc        string `json:"desc"`
+		ReplyOwned  string `json:"reply_owned"`
+		ReplyPrices string `json:"reply_prices"`
 	} `json:"list"`
 }
 

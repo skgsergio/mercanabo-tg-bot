@@ -191,21 +191,48 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
+	owned, err := db.GetThisWeekOwned(m.Sender, m.Chat)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	cost := int64(owned.Units * owned.Bells)
+
 	prices, err := db.GetCurrentSellPrices(m.Chat)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return
 	}
 
-	reply := texts.List.Reply
+	var reply string
+
+	if cost > 0 {
+		reply += fmt.Sprintf(texts.List.ReplyOwned, owned.Units, owned.Bells)
+		reply += "\n\n"
+	}
+
+	reply += texts.List.ReplyPrices + "\n"
 	for _, price := range prices {
-		reply += fmt.Sprintf("\n%s", price.User.Name())
+		reply += "\n" + price.User.Name()
 
 		if price.User.Username != "" {
 			reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
 		}
 
 		reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.BellsName)
+
+		if cost > 0 {
+			var profits int64 = int64(owned.Units*price.Bells) - cost
+
+			if profits > 0 {
+				reply += " 📈 "
+			} else {
+				reply += " 📉 "
+			}
+
+			reply += fmt.Sprintf("%v %s", profits, texts.BellsName)
+		}
 	}
 
 	t.reply(m, reply, &tb.SendOptions{
