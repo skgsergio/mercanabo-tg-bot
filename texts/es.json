@@ -32,6 +32,6 @@
     "cmd": "lista",
     "desc": "Lista el top 10 de precios actuales del grupo.",
     "reply_owned": "Esta semana compraste %v nabos a %v bayas/unidad.",
-    "reply_prices": "Precios de venta actuales:"
+    "reply_prices": "Precios de venta con fecha %v:"
   }
 }

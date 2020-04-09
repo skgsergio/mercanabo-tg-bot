@@ -199,7 +199,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 
 	cost := int64(owned.Units * owned.Bells)
 
-	prices, err := db.GetCurrentSellPrices(m.Chat)
+	prices, date, err := db.GetCurrentSellPrices(m.Chat)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return
@@ -208,11 +208,10 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	var reply string
 
 	if cost > 0 {
-		reply += fmt.Sprintf(texts.List.ReplyOwned, owned.Units, owned.Bells)
-		reply += "\n\n"
+		reply += fmt.Sprintf(texts.List.ReplyOwned, owned.Units, owned.Bells) + "\n\n"
 	}
 
-	reply += texts.List.ReplyPrices + "\n"
+	reply += fmt.Sprintf(texts.List.ReplyPrices, date) + "\n"
 	for _, price := range prices {
 		reply += "\n" + price.User.Name()
 

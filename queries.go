@@ -237,17 +237,17 @@ func (d *Database) getUserSellPrice(u *User, g *Group, t time.Time) (*Price, err
 }
 
 // GetCurrentSellPrices gets current sell price at Nook's Cranny
-func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, error) {
+func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, string, error) {
 	// Get group
 	group, err := d.GetGroup(c)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Get now config with group timezone
 	nowCfg, err := group.NowConfig()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Get the correct date
@@ -268,10 +268,10 @@ func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, error) {
 	err = d.DB.Set("gorm:auto_preload", true).Where("group_id = ? AND date = ?", group.ID, reqDate).Order("bells DESC").Find(&prices).Error
 	if err != nil {
 		log.Error().Str("module", "database").Err(err).Msg("error getting prices")
-		return nil, err
+		return nil, reqDate.Format(timeFormatAMPM), err
 	}
 
-	return prices, nil
+	return prices, reqDate.Format(timeFormatAMPM), nil
 }
 
 // saveSellPrice sets sell price at Nook's Cranny at a given time
