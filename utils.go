@@ -29,3 +29,14 @@ func parseUint32(s string) (uint32, error) {
 
 	return uint32(u), nil
 }
+
+// parseInt64 parses a string and converts it to int64
+func parseInt64(s string) (int64, error) {
+	i, err := strconv.ParseInt(s, 10, 32)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(i), nil
+}

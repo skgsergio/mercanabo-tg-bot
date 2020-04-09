@@ -67,8 +67,9 @@ func (t *Telegram) registerHandlers() {
 
 	t.bot.Handle("/start", t.handleStart)
 	t.bot.Handle(tb.OnAddedToGroup, t.handleAddedToGroup)
-	t.bot.Handle(fmt.Sprintf("/%s", texts.BuyCmd), t.handleBuyCmd)
-	t.bot.Handle(fmt.Sprintf("/%s", texts.SellCmd), t.handleSellCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.Help.Cmd), t.handleHelpCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.Buy.Cmd), t.handleBuyCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.Sell.Cmd), t.handleSellCmd)
 
 	t.handlersRegistered = true
 }

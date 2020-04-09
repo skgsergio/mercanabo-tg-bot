@@ -29,17 +29,34 @@ type Texts struct {
 	JoinText      string `json:"join_text"`
 	InternalError string `json:"internal_error"`
 	InvalidParams string `json:"invalid_parameters"`
-	BuyCmd        string `json:"buy_cmd"`
-	BuyDesc       string `json:"buy_desc"`
-	BuySaved      string `json:"buy_saved"`
-	BuyChanged    string `json:"buy_changed"`
-	SellCmd       string `json:"sell_cmd"`
-	SellDesc      string `json:"sell_desc"`
-	SellSaved     string `json:"sell_saved"`
-	SellChanged   string `json:"sell_changed"`
-	TZCmd         string `json:"tz_cmd"`
-	TZDesc        string `json:"tz_desc"`
 	BellsName     string `json:"bells_name"`
+
+	Help struct {
+		Cmd  string `json:"cmd"`
+		Desc string `json:"desc"`
+	} `json:"help"`
+
+	Buy struct {
+		Cmd     string `json:"cmd"`
+		Params  string `json:"params"`
+		Desc    string `json:"desc"`
+		Saved   string `json:"saved"`
+		Changed string `json:"changed"`
+	} `json:"buy"`
+
+	Sell struct {
+		Cmd     string `json:"cmd"`
+		Params  string `json:"params"`
+		Desc    string `json:"desc"`
+		Saved   string `json:"saved"`
+		Changed string `json:"changed"`
+	} `json:"sell"`
+
+	ChangeTZ struct {
+		Cmd    string `json:"cmd"`
+		Params string `json:"params"`
+		Desc   string `json:"desc"`
+	} `json:"changetz"`
 }
 
 // LoadTexts load a language texts json file and returns it as Texts

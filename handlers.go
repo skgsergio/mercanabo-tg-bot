@@ -46,6 +46,34 @@ func (t *Telegram) handleAddedToGroup(m *tb.Message) {
 	}
 }
 
+// handleHelpCmd triggers when the help cmd is sent to a group
+func (t *Telegram) handleHelpCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	helpLines := []string{
+		"Estos son los comandos disponibles:",
+		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Help.Cmd, texts.Help.Desc),
+		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
+		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
+		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, texts.ChangeTZ.Desc),
+	}
+
+	t.reply(m, strings.Join(helpLines, "\n"), &tb.SendOptions{
+		DisableWebPagePreview: true,
+		ParseMode:             tb.ModeHTML,
+	})
+}
+
 // handleBuyCmd triggers when the buy cmd is sent to a group, if sent in private the user will be warned
 func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if m.Private() {
@@ -63,14 +91,14 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 2 {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.BuyCmd, texts.BuyDesc))
+		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Buy.Cmd, texts.Buy.Params))
 		return
 	}
 
 	units, erru := parseUint32(parameters[0])
 	bells, errb := parseUint32(parameters[1])
 	if erru != nil || errb != nil {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.BuyCmd, texts.BuyDesc))
+		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Buy.Cmd, texts.Buy.Params))
 		return
 	}
 
@@ -82,9 +110,9 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	}
 
 	if new {
-		t.reply(m, fmt.Sprintf(texts.BuySaved, units, bells))
+		t.reply(m, fmt.Sprintf(texts.Buy.Saved, units, bells))
 	} else {
-		t.reply(m, fmt.Sprintf(texts.BuyChanged, units, bells, oldUnits, oldBells))
+		t.reply(m, fmt.Sprintf(texts.Buy.Changed, units, bells, oldUnits, oldBells))
 	}
 }
 
@@ -105,13 +133,13 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 1 {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.SellCmd, texts.SellDesc))
+		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Sell.Cmd, texts.Sell.Params))
 		return
 	}
 
 	bells, err := parseUint32(parameters[0])
 	if err != nil {
-		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.SellCmd, texts.SellDesc))
+		t.reply(m, fmt.Sprintf("%v\n\n%v %v", texts.InvalidParams, texts.Sell.Cmd, texts.Sell.Params))
 		return
 	}
 
@@ -121,8 +149,8 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	}
 
 	if new {
-		t.reply(m, fmt.Sprintf(texts.SellSaved, bells, date))
+		t.reply(m, fmt.Sprintf(texts.Sell.Saved, bells, date))
 	} else {
-		t.reply(m, fmt.Sprintf(texts.SellChanged, bells, date, oldBells))
+		t.reply(m, fmt.Sprintf(texts.Sell.Changed, bells, date, oldBells))
 	}
 }

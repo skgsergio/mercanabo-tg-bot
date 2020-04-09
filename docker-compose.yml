@@ -11,6 +11,7 @@ services:
       - MERCANABO_DEFAULT_TZ
       - MERCANABO_LANG
       - MERCANABO_DEBUG
+      - MERCANABO_SUPERADMINS
       - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_SSLMODE=disable

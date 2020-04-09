@@ -17,6 +17,7 @@ package main
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -24,10 +25,11 @@ import (
 )
 
 var (
-	defaultTZ string    = "UTC"
-	bot       *Telegram = nil
-	db        *Database = nil
-	texts     *Texts    = nil
+	defaultTZ   string    = "UTC"
+	bot         *Telegram = nil
+	db          *Database = nil
+	texts       *Texts    = nil
+	superAdmins []int64   = []int64{}
 )
 
 func main() {
@@ -82,6 +84,20 @@ func main() {
 	}
 
 	log.Info().Str("module", "main").Str("timezone", defaultTZ).Msg("loaded default timezone for new groups")
+
+	// Load superadmin list
+	if envsa := os.Getenv("MERCANABO_SUPERADMINS"); envsa != "" {
+		for _, uidStr := range strings.Split(envsa, ",") {
+			uid, err := parseInt64(uidStr)
+			if err != nil {
+				log.Fatal().Str("module", "main").Err(err).Msg("failed parsing superadmins list")
+			}
+
+			superAdmins = append(superAdmins, uid)
+		}
+	}
+
+	log.Info().Str("module", "main").Ints64("user_ids", superAdmins).Msg("loaded superadmins")
 
 	// Connecto to the DB
 	db, err = OpenDB(

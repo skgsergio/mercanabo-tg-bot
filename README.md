@@ -17,10 +17,13 @@ go build
 ### Configuration environment variables
 
 - `MERCANABO_TOKEN`: Telegram token. See https://core.telegram.org/bots
-- `MERCANABO_DEFAULT_TZ`: Default Time Zone for new groups, group admins can
-  change this. See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-- `MERCANABO_LANG`: Bot language, this is global and can't be changed by group
-  (at least currently). See: [texts](texts)
+- `MERCANABO_SUPERADMINS`: Comma separated list of Telegram user ids,
+  superadmins will have power over the bot in any channel as well as accesing
+  private administration commands.
+- `MERCANABO_DEFAULT_TZ` (default: `UTC`): Default Time Zone for new groups, group admins can
+  change the timezone for their group. See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+- `MERCANABO_LANG` (default: `default`): Bot language, this is global and can't be changed per
+  group. See: [texts](texts)
 - `MERCANABO_DEBUG`: If `true` then sets the log level to `debug`, changes the
   log output to a colorful mode and enables `gorm` debug log.
 - `POSTGRES_HOST`: PostgreSQL hostname.
