@@ -4,6 +4,7 @@ services:
   bot:
     build: .
     command: ['/bin/sh', '-c', 'while ! pg_isready -h $${POSTGRES_HOST} -p $${POSTGRES_PORT} -U $${POSTGRES_USER}; do sleep 5; done && ./mercanabo']
+    restart: unless-stopped
     depends_on:
       - database
     environment:
@@ -21,6 +22,7 @@ services:
 
   database:
     image: postgres:latest
+    restart: unless-stopped
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
