@@ -25,9 +25,10 @@ import (
 
 // Group represents a Telegram group
 type Group struct {
-	ID    int64  `gorm:"PRIMARY_KEY;NOT NULL"`
-	Title string `gorm:"NOT NULL"`
-	TZ    string `gorm:"NOT NULL"`
+	ID            int64  `gorm:"PRIMARY_KEY;NOT NULL"`
+	Title         string `gorm:"NOT NULL;DEFAULT:''"`
+	TZ            string `gorm:"NOT NULL;DEFAULT:'UTC'"`
+	DeleteSeconds uint8  `gorm:"NOT NULL;DEFAULT:0"`
 }
 
 // NowConfig returns a now.Config with the group timezone
@@ -48,9 +49,9 @@ func (g *Group) NowConfig() (*now.Config, error) {
 // User represents a Telegram user
 type User struct {
 	ID        int64  `gorm:"PRIMARY_KEY;NOT NULL"`
-	FirstName string `gorm:"NOT NULL"`
-	LastName  string `gorm:"NOT NULL"`
-	Username  string `gorm:"NOT NULL"`
+	FirstName string `gorm:"NOT NULL;DEFAULT:''"`
+	LastName  string `gorm:"NOT NULL;DEFAULT:''"`
+	Username  string `gorm:"NOT NULL;DEFAULT:''"`
 }
 
 // Name returns the full name of the User
@@ -80,8 +81,8 @@ type Price struct {
 	Group   Group     `gorm:"FOREIGNKEY:GroupID"`
 	UserID  int64     `gorm:"INDEX;NOT NULL"`
 	User    User      `gorm:"FOREIGNKEY:UserID"`
-	Bells   uint32    `gorm:"NOT NULL"`
-	Date    time.Time `gorm:"INDEX;NOT NULL"`
+	Bells   uint32    `gorm:"NOT NULL;DEFAULT:0"`
+	Date    time.Time `gorm:"INDEX;NOT NULL";DEFAULT:0`
 }
 
 // Owned represents how many turnips owns an User in a Group in a given date

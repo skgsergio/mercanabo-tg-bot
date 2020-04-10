@@ -19,6 +19,17 @@ import (
 	"strconv"
 )
 
+// parseUint8 parses a string and converts it to uint8
+func parseUint8(s string) (uint8, error) {
+	u, err := strconv.ParseUint(s, 10, 8)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return uint8(u), nil
+}
+
 // parseUint32 parses a string and converts it to uint32
 func parseUint32(s string) (uint32, error) {
 	u, err := strconv.ParseUint(s, 10, 32)

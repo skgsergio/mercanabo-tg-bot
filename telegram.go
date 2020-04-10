@@ -72,18 +72,13 @@ func (t *Telegram) registerHandlers() {
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Sell.Cmd), t.handleSellCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.List.Cmd), t.handleListCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Chart.Cmd), t.handleChartCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.Delete.Cmd), t.handleDeleteCmd)
 
 	t.handlersRegistered = true
 }
 
 // send sends a message with error logging and retries
 func (t *Telegram) send(to tb.Recipient, what interface{}, options ...interface{}) *tb.Message {
-	var (
-		msg *tb.Message = nil
-		err error       = nil
-		try int         = 1
-	)
-
 	hasParseMode := false
 	for _, opt := range options {
 		if _, hasParseMode = opt.(tb.ParseMode); hasParseMode {
@@ -95,35 +90,30 @@ func (t *Telegram) send(to tb.Recipient, what interface{}, options ...interface{
 		options = append(options, tb.ModeHTML)
 	}
 
+	try := 1
 	for {
-		msg, err = t.bot.Send(to, what, options...)
+		msg, err := t.bot.Send(to, what, options...)
 
 		if err == nil {
-			break
+			return msg
 		}
 
 		if try > 5 {
-			log.Error().Err(err).Msg("send aborted, retry limit exceeded")
-			break
+			log.Error().Str("module", "telegram").Err(err).Msg("send aborted, retry limit exceeded")
+			return nil
 		}
 
 		backoff := time.Second * 5 * time.Duration(try)
-		log.Warn().Err(err).Str("sleep", backoff.String()).Msg("send failed, sleeping and retrying")
+		log.Warn().Str("module", "telegram").Err(err).Str("sleep", backoff.String()).Msg("send failed, sleeping and retrying")
 		time.Sleep(backoff)
 		try++
 	}
 
-	return msg
+	return nil
 }
 
 // reply replies a message with error logging and retries
 func (t *Telegram) reply(to *tb.Message, what interface{}, options ...interface{}) *tb.Message {
-	var (
-		msg *tb.Message = nil
-		err error       = nil
-		try int         = 1
-	)
-
 	hasParseMode := false
 	for _, opt := range options {
 		if _, hasParseMode = opt.(tb.ParseMode); hasParseMode {
@@ -135,23 +125,71 @@ func (t *Telegram) reply(to *tb.Message, what interface{}, options ...interface{
 		options = append(options, tb.ModeHTML)
 	}
 
+	try := 1
 	for {
-		_, err = t.bot.Reply(to, what, options...)
+		msg, err := t.bot.Reply(to, what, options...)
 
 		if err == nil {
-			break
+			return msg
 		}
 
 		if try > 5 {
-			log.Error().Err(err).Msg("reply aborted, retry limit exceeded")
-			break
+			log.Error().Str("module", "telegram").Err(err).Msg("reply aborted, retry limit exceeded")
+			return nil
 		}
 
 		backoff := time.Second * 5 * time.Duration(try)
-		log.Warn().Err(err).Str("sleep", backoff.String()).Msg("reply failed, sleeping and retrying")
+		log.Warn().Str("module", "telegram").Err(err).Str("sleep", backoff.String()).Msg("reply failed, sleeping and retrying")
 		time.Sleep(backoff)
 		try++
 	}
 
-	return msg
+	return nil
+}
+
+func (t *Telegram) cleanupChatMsgs(chat *tb.Chat, msgs []*tb.Message) {
+	var err error = nil
+
+	// Check if the group requires message deletion
+	group, err := db.GetGroup(chat)
+	if err != nil {
+		log.Error().Str("module", "telegram").Err(err).Msg("failed getting group delete seconds")
+		return
+	}
+
+	if group.DeleteSeconds == 0 {
+		return
+	}
+
+	// Grab bot permissions over the chat
+	cm, err := t.bot.ChatMemberOf(chat, t.bot.Me)
+
+	if err != nil {
+		log.Error().Str("module", "telegram").Err(err).Msg("failed getting bot membership in chat")
+		return
+	}
+
+	// Sleep
+	time.Sleep(time.Duration(group.DeleteSeconds) * time.Second)
+
+	for _, m := range msgs {
+		if m == nil {
+			log.Error().Str("module", "telegram").Msg("message to delete is nil")
+			continue
+		}
+
+		// Chech the message belongs to the chat
+		if m.Chat.ID != chat.ID {
+			log.Error().Str("module", "telegram").Int64("chat_id", chat.ID).Int64("m_chat_id", m.Chat.ID).Msg("message to delete doesn't belong the chat")
+			continue
+		}
+
+		// If the message is from the bot we can just delete it
+		if m.Sender.ID == t.bot.Me.ID || cm.CanDeleteMessages {
+			err = t.bot.Delete(m)
+			if err != nil {
+				log.Error().Str("module", "telegram").Err(err).Msg("failed deleting message")
+			}
+		}
+	}
 }

@@ -117,6 +117,20 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 	return user, group, nil
 }
 
+// ChangeGroupDeleteSeconds changes the group delete seconds setting
+func (d *Database) ChangeGroupDeleteSeconds(c *tb.Chat, seconds uint8) error {
+	// Get group
+	group, err := d.GetGroup(c)
+	if err != nil {
+		return err
+	}
+
+	group.DeleteSeconds = seconds
+	d.DB.Save(group)
+
+	return nil
+}
+
 // getUserWeekOwned returns owned turnips by the user this week
 func (d *Database) getUserWeekOwned(u *User, g *Group) (*Owned, error) {
 	// Get now config with group timezone

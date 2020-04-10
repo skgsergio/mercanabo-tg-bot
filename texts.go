@@ -32,6 +32,7 @@ type Texts struct {
 	BellsName     string   `json:"bells_name"`
 	Days          []string `json:"days"`
 	DaysShort     []string `json:"days_short"`
+	Unprivileged  string   `json:"unprivileged"`
 
 	Help struct {
 		Cmd  string `json:"cmd"`
@@ -55,12 +56,6 @@ type Texts struct {
 		InvalidDate string `json:"invalid_date"`
 	} `json:"sell"`
 
-	ChangeTZ struct {
-		Cmd    string `json:"cmd"`
-		Params string `json:"params"`
-		Desc   string `json:"desc"`
-	} `json:"changetz"`
-
 	List struct {
 		Cmd         string `json:"cmd"`
 		Desc        string `json:"desc"`
@@ -72,6 +67,20 @@ type Texts struct {
 		Cmd  string `json:"cmd"`
 		Desc string `json:"desc"`
 	} `json:"chart"`
+
+	Delete struct {
+		Cmd      string `json:"cmd"`
+		Params   string `json:"params"`
+		Desc     string `json:"desc"`
+		Done     string `json:"done"`
+		Disabled string `json:"disabled"`
+	} `json:"delete"`
+
+	ChangeTZ struct {
+		Cmd    string `json:"cmd"`
+		Params string `json:"params"`
+		Desc   string `json:"desc"`
+	} `json:"changetz"`
 }
 
 // LoadTexts load a language texts json file and returns it as Texts

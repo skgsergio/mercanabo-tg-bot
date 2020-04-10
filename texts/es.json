@@ -6,6 +6,7 @@
   "bells_name": "bayas",
   "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
   "days_short": ["Dom.", "Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb."],
+  "unprivileged": "No tienes permisos para hacer eso.",
   "help": {
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?"
@@ -25,11 +26,6 @@
     "changed": "¡Lo cambio! El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b> en vez de <b>%v</b> bayas.",
     "invalid_date": "La fecha que has introducido no cumple el formato <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>"
   },
-  "changetz": {
-    "cmd": "horario",
-    "params": "[zona horaria]",
-    "desc": "Indica la zona horaria del grupo, solo para administradores del grupo. (Ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
-  },
   "list": {
     "cmd": "lista",
     "desc": "Lista el top 10 de precios actuales del grupo.",
@@ -39,5 +35,18 @@
   "chart": {
     "cmd": "grafica",
     "desc": "Muestra tu gráfica de precios de esta semana."
+  },
+  "delete": {
+    "cmd": "borrado",
+    "params": "[segundos: 0-30]",
+    "desc": "Configura el numero de segundos tras los cuales los mensajes de confirmación se borraran, si el bot es administrador además borrara el mensaje del usuario. Si se especifica 0 segundos se desactiva",
+    "done": "¡Hecho! A partir de ahora se borraran los mensajes en <b>%v</b> segundos. Empezando por este.",
+    "disabled": "¡Hecho! Se ha deshabilitado el borrado de mensajes."
+
+  },
+  "changetz": {
+    "cmd": "horario",
+    "params": "[zona horaria]",
+    "desc": "Indica la zona horaria del grupo, solo para administradores del grupo. (Ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
   }
 }
