@@ -4,6 +4,8 @@
   "internal_error": "¡Ups! Se ha producido un error interno del bot.",
   "invalid_parameters": "Parametros inválidos para el comando:",
   "bells_name": "bayas",
+  "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+  "days_short": ["Dom.", "Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb."],
   "help": {
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?"

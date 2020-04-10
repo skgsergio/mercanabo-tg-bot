@@ -298,7 +298,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Generate chart
-	chart, err := TimeSeriesChart(user.String(), xValues, yValues, float64(owned.Bells), groupNow.TimeLocation)
+	chart, err := TimeSeriesChart(user.String(), xValues, yValues, float64(owned.Bells), groupNow.TimeLocation, true)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return

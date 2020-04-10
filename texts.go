@@ -25,11 +25,13 @@ import (
 
 // Texts represent the texts used in user parts of the bot
 type Texts struct {
-	GroupOnly     string `json:"group_only"`
-	JoinText      string `json:"join_text"`
-	InternalError string `json:"internal_error"`
-	InvalidParams string `json:"invalid_parameters"`
-	BellsName     string `json:"bells_name"`
+	GroupOnly     string   `json:"group_only"`
+	JoinText      string   `json:"join_text"`
+	InternalError string   `json:"internal_error"`
+	InvalidParams string   `json:"invalid_parameters"`
+	BellsName     string   `json:"bells_name"`
+	Days          []string `json:"days"`
+	DaysShort     []string `json:"days_short"`
 
 	Help struct {
 		Cmd  string `json:"cmd"`

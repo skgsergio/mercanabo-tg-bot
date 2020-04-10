@@ -26,7 +26,11 @@ import (
 )
 
 // TimeSeriesChart returns a chart given a slice of prices
-func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineValue float64, location *time.Location) (*bytes.Buffer, error) {
+func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineValue float64, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
+	if addRangeTitle {
+		title += fmt.Sprintf(" | %s - %s", xValues[0].Format("2006-01-02"), xValues[len(xValues)-1].Format("2006-01-02"))
+	}
+
 	graphSeries := []chart.Series{}
 
 	// Create price series
@@ -49,8 +53,16 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 		Annotations: []chart.Value2{},
 	}
 
+	// Create ticks for x axis
+	ticks := make([]chart.Tick, priceSeries.Len())
+
+	// Fill annotations and ticks
 	for i := 0; i < priceSeries.Len(); i++ {
 		x, y := priceSeries.GetValues(i)
+		t := TimeToShortDayAMPM(ChartValueToTime(x, location))
+
+		ticks[i].Value = x
+		ticks[i].Label = t
 
 		if y != 0 {
 			priceAnnotations.Annotations = append(
@@ -101,7 +113,12 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 			FontSize: 12,
 		},
 		XAxis: chart.XAxis{
-			ValueFormatter: TimeValueFormatterWithLocationAndFormat(location, timeFormatAMPM),
+			Ticks: ticks,
+			GridMinorStyle: chart.Style{
+				StrokeColor:     chart.ColorAlternateGray.WithAlpha(128),
+				StrokeWidth:     1.0,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
 		},
 		YAxis: chart.YAxis{
 			Name: texts.BellsName,
@@ -119,23 +136,26 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 	return buffer, err
 }
 
-// TimeValueFormatterWithLocationAndFormat returns a custom formatter that converts date to a given time zone
-func TimeValueFormatterWithLocationAndFormat(location *time.Location, dateFormat string) chart.ValueFormatter {
-	return func(v interface{}) string {
-		if typed, isTyped := v.(time.Time); isTyped {
-			return typed.In(location).Format(dateFormat)
-		}
-
-		if typed, isTyped := v.(int64); isTyped {
-			return time.Unix(0, typed).In(location).Format(dateFormat)
-		}
-
-		if typed, isTyped := v.(float64); isTyped {
-			return time.Unix(0, int64(typed)).In(location).Format(dateFormat)
-		}
-
-		return ""
+// ChartValueToTime casts a chart value to a time.Time if possible
+func ChartValueToTime(v interface{}, location *time.Location) time.Time {
+	if t, ok := v.(time.Time); ok {
+		return t.In(location)
 	}
+
+	if i, ok := v.(int64); ok {
+		return time.Unix(0, i).In(location)
+	}
+
+	if f, ok := v.(float64); ok {
+		return time.Unix(0, int64(f)).In(location)
+	}
+
+	return time.Time{}
+}
+
+// TimeToShortDayAMPM prints the name of the weekday plus AM or PM
+func TimeToShortDayAMPM(t time.Time) string {
+	return texts.DaysShort[t.Weekday()] + " " + t.Format("PM")
 }
 
 // ZerologGoChart is a simple custom logger using Zerolog for go-chart
