@@ -33,5 +33,9 @@
     "desc": "Lista el top 10 de precios actuales del grupo.",
     "reply_owned": "Esta semana compraste <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "reply_prices": "Precios de venta con fecha <b>%v</b>:"
+  },
+  "chart": {
+    "cmd": "grafica",
+    "desc": "Muestra tu gráfica de precios de esta semana."
   }
 }

@@ -64,6 +64,15 @@ func (u *User) Name() string {
 	return name
 }
 
+// String returns the full name and username (if user has)
+func (u *User) String() string {
+	if u.Username == "" {
+		return u.Name()
+	}
+
+	return u.Name() + " (@" + u.Username + ")"
+}
+
 // Price is a price that a User recorded in a Group
 type Price struct {
 	ID      uint64    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;NOT NULL"`

@@ -117,8 +117,8 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 	return user, group, nil
 }
 
-// getThisWeekOwned returns owned turnips by the user this week
-func (d *Database) getThisWeekOwned(u *User, g *Group) (*Owned, error) {
+// getUserWeekOwned returns owned turnips by the user this week
+func (d *Database) getUserWeekOwned(u *User, g *Group) (*Owned, error) {
 	// Get now config with group timezone
 	nowCfg, err := g.NowConfig()
 	if err != nil {
@@ -146,14 +146,14 @@ func (d *Database) getThisWeekOwned(u *User, g *Group) (*Owned, error) {
 	return owned, nil
 }
 
-// GetThisWeekOwned returns owned turnips by the user this week
-func (d *Database) GetThisWeekOwned(u *tb.User, c *tb.Chat) (*Owned, error) {
+// GetUserWeekOwned returns owned turnips by the user this week
+func (d *Database) GetUserWeekOwned(u *tb.User, c *tb.Chat) (*Owned, error) {
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
 		return nil, err
 	}
 
-	return d.getThisWeekOwned(user, group)
+	return d.getUserWeekOwned(user, group)
 }
 
 // SaveThisWeekOwned sets owned turnips by the user this week
@@ -171,7 +171,7 @@ func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells
 	}
 
 	// Get current week owneds if exists
-	owned, err := db.getThisWeekOwned(user, group)
+	owned, err := db.getUserWeekOwned(user, group)
 	if err != nil {
 		return false, 0, 0, err
 	}
@@ -199,8 +199,8 @@ func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells
 	return new, oldUnits, oldBells, err
 }
 
-// getUserSellPrice gets sell price at Nook's Cranny of an User in a Group at a given time
-func (d *Database) getUserSellPrice(u *User, g *Group, t time.Time) (*Price, error) {
+// getUserPrice gets sell price at Nook's Cranny of an User in a Group at a given time
+func (d *Database) getUserPrice(u *User, g *Group, t time.Time) (*Price, error) {
 	// Get now config with group timezone
 	nowCfg, err := g.NowConfig()
 	if err != nil {
@@ -236,8 +236,8 @@ func (d *Database) getUserSellPrice(u *User, g *Group, t time.Time) (*Price, err
 	return price, nil
 }
 
-// GetCurrentSellPrices gets current sell price at Nook's Cranny
-func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, string, error) {
+// GetCurrentPrices gets current sell price at Nook's Cranny
+func (d *Database) GetCurrentPrices(c *tb.Chat) ([]*Price, string, error) {
 	// Get group
 	group, err := d.GetGroup(c)
 	if err != nil {
@@ -274,10 +274,47 @@ func (d *Database) GetCurrentSellPrices(c *tb.Chat) ([]*Price, string, error) {
 	return prices, reqDate.Format(timeFormatAMPM), nil
 }
 
-// saveSellPrice sets sell price at Nook's Cranny at a given time
-func (d *Database) saveSellPrice(u *User, g *Group, bells uint32, t time.Time) (bool, uint32, string, error) {
+// GetUserWeekPrices gets current sell price at Nook's Cranny
+func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat) ([]*Price, error) {
+	// Get user and group
+	user, group, err := d.GetUserAndGroup(u, c)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get now config with group timezone
+	nowCfg, err := group.NowConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get week start and end dates
+	bowDate := nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
+	eowDate := nowCfg.With(bowDate).EndOfWeek()
+
+	// Query current group prices
+	prices := []*Price{}
+
+	err = d.DB.Where(
+		"user_id = ? AND group_id = ? AND date >= ? AND date <= ?",
+		user.ID,
+		group.ID,
+		bowDate,
+		eowDate,
+	).Order("date ASC").Find(&prices).Error
+
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error getting prices")
+		return nil, err
+	}
+
+	return prices, nil
+}
+
+// saveUserPrice sets sell price at Nook's Cranny at a given time
+func (d *Database) saveUserPrice(u *User, g *Group, bells uint32, t time.Time) (bool, uint32, string, error) {
 	// Save price
-	price, err := d.getUserSellPrice(u, g, t)
+	price, err := d.getUserPrice(u, g, t)
 	if err != nil {
 		return false, 0, "", err
 	}
@@ -303,8 +340,8 @@ func (d *Database) saveSellPrice(u *User, g *Group, bells uint32, t time.Time) (
 	return new, oldBells, t.Format(timeFormatAMPM), nil
 }
 
-// SaveSellPrice sets sell price at Nook's Cranny at a given time
-func (d *Database) SaveSellPrice(u *tb.User, c *tb.Chat, bells uint32, dateStr string) (bool, uint32, string, error) {
+// SaveUserPrice sets sell price at Nook's Cranny at a given time
+func (d *Database) SaveUserPrice(u *tb.User, c *tb.Chat, bells uint32, dateStr string) (bool, uint32, string, error) {
 	// Get user and group
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
@@ -324,11 +361,11 @@ func (d *Database) SaveSellPrice(u *tb.User, c *tb.Chat, bells uint32, dateStr s
 	}
 
 	// Save price
-	return d.saveSellPrice(user, group, bells, date)
+	return d.saveUserPrice(user, group, bells, date)
 }
 
-// SaveCurrentSellPrice sets current sell price at Nook's Cranny
-func (d *Database) SaveCurrentSellPrice(u *tb.User, c *tb.Chat, bells uint32) (bool, uint32, string, error) {
+// SaveUserCurrentPrice sets current sell price at Nook's Cranny
+func (d *Database) SaveUserCurrentPrice(u *tb.User, c *tb.Chat, bells uint32) (bool, uint32, string, error) {
 	// Get user and group
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
@@ -354,5 +391,5 @@ func (d *Database) SaveCurrentSellPrice(u *tb.User, c *tb.Chat, bells uint32) (b
 	}
 
 	// Save price
-	return d.saveSellPrice(user, group, bells, currentDate)
+	return d.saveUserPrice(user, group, bells, currentDate)
 }

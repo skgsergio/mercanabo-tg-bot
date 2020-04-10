@@ -65,6 +65,11 @@ type Texts struct {
 		ReplyOwned  string `json:"reply_owned"`
 		ReplyPrices string `json:"reply_prices"`
 	} `json:"list"`
+
+	Chart struct {
+		Cmd  string `json:"cmd"`
+		Desc string `json:"desc"`
+	} `json:"chart"`
 }
 
 // LoadTexts load a language texts json file and returns it as Texts

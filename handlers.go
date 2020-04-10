@@ -18,6 +18,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	tb "gopkg.in/tucnak/telebot.v2"
 
@@ -64,6 +65,7 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 		"Estos son los comandos disponibles:",
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Help.Cmd, texts.Help.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.List.Cmd, texts.List.Desc),
+		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Chart.Cmd, texts.Chart.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, texts.ChangeTZ.Desc),
@@ -149,13 +151,13 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	)
 
 	if len(parameters) == 1 {
-		new, oldBells, date, err = db.SaveCurrentSellPrice(m.Sender, m.Chat, bells)
+		new, oldBells, date, err = db.SaveUserCurrentPrice(m.Sender, m.Chat, bells)
 		if err != nil {
 			t.reply(m, texts.InternalError)
 			return
 		}
 	} else {
-		new, oldBells, date, err = db.SaveSellPrice(m.Sender, m.Chat, bells, strings.Join(parameters[1:], " "))
+		new, oldBells, date, err = db.SaveUserPrice(m.Sender, m.Chat, bells, strings.Join(parameters[1:], " "))
 		if err != nil {
 			if err == ErrDateParse {
 				t.reply(m, fmt.Sprintf(texts.Sell.InvalidDate, strings.Join(parameters[1:], " ")))
@@ -188,7 +190,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
-	owned, err := db.GetThisWeekOwned(m.Sender, m.Chat)
+	owned, err := db.GetUserWeekOwned(m.Sender, m.Chat)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return
@@ -196,7 +198,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 
 	cost := int64(owned.Units * owned.Bells)
 
-	prices, date, err := db.GetCurrentSellPrices(m.Chat)
+	prices, date, err := db.GetCurrentPrices(m.Chat)
 	if err != nil {
 		t.reply(m, texts.InternalError)
 		return
@@ -232,4 +234,75 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	}
 
 	t.reply(m, reply)
+}
+
+// handleChartCmd triggers when the chart cmd is sent to a group, if sent in private the user will be warned
+func (t *Telegram) handleChartCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	// Get group timezone
+	user, group, err := db.GetUserAndGroup(m.Sender, m.Chat)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	groupNow, err := group.NowConfig()
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	// Get prices
+	prices, err := db.GetUserWeekPrices(m.Sender, m.Chat)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	// Get owned
+	owned, err := db.GetUserWeekOwned(m.Sender, m.Chat)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	// Craft data to have a good looking graph when data is missing
+	xValues := make([]time.Time, 12)
+	yValues := make([]float64, 12)
+
+	groupNow.WeekStartDay = time.Monday
+	bowDate := groupNow.With(time.Now().In(groupNow.TimeLocation)).BeginningOfWeek()
+
+	for i := 0; i < 12; i++ {
+		xValues[i] = bowDate.Add(time.Hour * 12 * time.Duration(i))
+	}
+
+	for _, price := range prices {
+		for i := range xValues {
+			if price.Date.Equal(xValues[i]) {
+				yValues[i] = float64(price.Bells)
+				break
+			}
+		}
+	}
+
+	// Generate chart
+	chart, err := TimeSeriesChart(user.String(), xValues, yValues, float64(owned.Bells), groupNow.TimeLocation)
+	if err != nil {
+		t.reply(m, texts.InternalError)
+		return
+	}
+
+	t.reply(m, &tb.Photo{File: tb.FromReader(chart)})
 }
