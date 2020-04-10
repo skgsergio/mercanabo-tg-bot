@@ -108,8 +108,6 @@ func (t *Telegram) send(to tb.Recipient, what interface{}, options ...interface{
 		time.Sleep(backoff)
 		try++
 	}
-
-	return nil
 }
 
 // reply replies a message with error logging and retries
@@ -143,8 +141,6 @@ func (t *Telegram) reply(to *tb.Message, what interface{}, options ...interface{
 		time.Sleep(backoff)
 		try++
 	}
-
-	return nil
 }
 
 func (t *Telegram) cleanupChatMsgs(chat *tb.Chat, msgs []*tb.Message) {

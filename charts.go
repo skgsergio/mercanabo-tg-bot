@@ -168,7 +168,7 @@ func (l *ZerologGoChart) Info(arguments ...interface{}) {
 
 // Infof writes an info message.
 func (l *ZerologGoChart) Infof(format string, arguments ...interface{}) {
-	log.Info().Str("module", "chart").Msgf(format, arguments)
+	log.Info().Str("module", "chart").Msgf(format, arguments...)
 }
 
 // Debug writes an debug message.
@@ -178,7 +178,7 @@ func (l *ZerologGoChart) Debug(arguments ...interface{}) {
 
 // Debugf writes an debug message.
 func (l *ZerologGoChart) Debugf(format string, arguments ...interface{}) {
-	log.Debug().Str("module", "chart").Msgf(format, arguments)
+	log.Debug().Str("module", "chart").Msgf(format, arguments...)
 }
 
 // Error writes an error message.
@@ -188,7 +188,7 @@ func (l *ZerologGoChart) Error(arguments ...interface{}) {
 
 // Errorf writes an error message.
 func (l *ZerologGoChart) Errorf(format string, arguments ...interface{}) {
-	log.Error().Str("module", "chart").Msgf(format, arguments)
+	log.Error().Str("module", "chart").Msgf(format, arguments...)
 }
 
 // Err writes an error message.

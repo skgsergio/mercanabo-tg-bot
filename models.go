@@ -82,7 +82,7 @@ type Price struct {
 	UserID  int64     `gorm:"INDEX;NOT NULL"`
 	User    User      `gorm:"FOREIGNKEY:UserID"`
 	Bells   uint32    `gorm:"NOT NULL;DEFAULT:0"`
-	Date    time.Time `gorm:"INDEX;NOT NULL";DEFAULT:0`
+	Date    time.Time `gorm:"INDEX;NOT NULL;DEFAULT:0"`
 }
 
 // Owned represents how many turnips owns an User in a Group in a given date

@@ -328,7 +328,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		return
 	}
 
-	t.send(m, &tb.Photo{File: tb.FromReader(chart)})
+	t.send(m.Chat, &tb.Photo{File: tb.FromReader(chart)})
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
