@@ -38,6 +38,11 @@ To simplify the deployment there is a [Docker Compose](docker-compose.yml) file
 ready to use. You can just use it and it will deploy a postgresql container, with
 a volume for persistence, and a bot container, that is build from local source.
 
+## TODO
+
+- Charts, everything is better with them. STONKS 📉 📈
+- Implement the forecaster ([resources](forecast/README.md))
+
 ## License
 This project is licensed under the GPL 3.0 License. See the [LICENSE](LICENSE)
 file for details.
