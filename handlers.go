@@ -38,13 +38,15 @@ func (t *Telegram) handleStart(m *tb.Message) {
 func (t *Telegram) handleAddedToGroup(m *tb.Message) {
 	log.Info().Str("module", "telegram").Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).Msg("added to group")
 
-	t.send(m.Chat, texts.JoinText)
-
 	// Register the group in the DB
-	_, err := db.GetGroup(m.Chat)
+	group, err := db.GetGroup(m.Chat)
 	if err != nil {
 		log.Error().Str("module", "telegram").Err(err).Msg("error getting or creating group")
+		return
 	}
+
+	// Send welcome text
+	t.send(m.Chat, fmt.Sprintf(texts.JoinText, group.TZ, texts.Help.Cmd))
 }
 
 // handleHelpCmd triggers when the help cmd is sent to a group
