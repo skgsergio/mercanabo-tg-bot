@@ -358,6 +358,11 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 
 	// Check if it is an admin
 	cm, err := t.bot.ChatMemberOf(m.Chat, t.bot.Me)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
 
 	if !isSuperAdmin && cm.Role != tb.Creator && cm.Role != tb.Administrator {
 		rm := t.reply(m, texts.Unprivileged)

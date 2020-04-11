@@ -37,7 +37,7 @@ jobs:
 
       - name: Run gofmt
         if: always()
-        run: test -z "$(gofmt -s -l .)"
+        run: golintout="$(gofmt -s -l .)"; if [ -n "$golintout"]; then echo -n "Format check failed:\n${golintout}" && exit 1; fi
 
       - name: Run go vet
         if: always()
