@@ -35,8 +35,10 @@ type Texts struct {
 	Unprivileged  string   `json:"unprivileged"`
 
 	Help struct {
-		Cmd  string `json:"cmd"`
-		Desc string `json:"desc"`
+		Cmd           string `json:"cmd"`
+		Desc          string `json:"desc"`
+		AvailableCmds string `json:"available_cmds"`
+		AdminCmds     string `json:"admin_cmds"`
 	} `json:"help"`
 
 	Buy struct {
@@ -48,12 +50,13 @@ type Texts struct {
 	} `json:"buy"`
 
 	Sell struct {
-		Cmd         string `json:"cmd"`
-		Params      string `json:"params"`
-		Desc        string `json:"desc"`
-		Saved       string `json:"saved"`
-		Changed     string `json:"changed"`
-		InvalidDate string `json:"invalid_date"`
+		Cmd           string `json:"cmd"`
+		Params        string `json:"params"`
+		Desc          string `json:"desc"`
+		Saved         string `json:"saved"`
+		Changed       string `json:"changed"`
+		InvalidDate   string `json:"invalid_date"`
+		NoMarketToday string `json:"no_market_today"`
 	} `json:"sell"`
 
 	List struct {

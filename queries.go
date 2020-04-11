@@ -29,6 +29,9 @@ import (
 var (
 	// ErrDateParse is returned when an user input date failed to be parsed
 	ErrDateParse = errors.New("date parse failed")
+
+	// ErrBuyDay is returned when an user tries to set a sell price on a buy day
+	ErrBuyDay = errors.New("date is buy day, can't store a sell price")
 )
 
 // GetGroup returns the group entity given a telegram chat entity updating the its data if changed, if doesnt exist just creates and returns it
@@ -327,10 +330,15 @@ func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat) ([]*Price, error) {
 
 // saveUserPrice sets sell price at Nook's Cranny at a given time
 func (d *Database) saveUserPrice(u *User, g *Group, bells uint32, t time.Time) (bool, uint32, string, error) {
+	// If is sell day then there is no market
+	if t.Weekday() == turnipSellDay {
+		return false, 0, t.Format(timeFormatAMPM), ErrBuyDay
+	}
+
 	// Save price
 	price, err := d.getUserPrice(u, g, t)
 	if err != nil {
-		return false, 0, "", err
+		return false, 0, t.Format(timeFormatAMPM), err
 	}
 
 	new := db.DB.NewRecord(price)

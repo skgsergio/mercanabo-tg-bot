@@ -9,7 +9,9 @@
   "unprivileged": "No tienes permisos para hacer eso.",
   "help": {
     "cmd": "ayuda",
-    "desc": "Muestra esta ayuda. Era obvio, ¿no?"
+    "desc": "Muestra esta ayuda. Era obvio, ¿no?",
+    "available_cmds": "Comandos disponibles:",
+    "admin_cmds": "Comandos para administradores:"
   },
   "buy": {
     "cmd": "compra",
@@ -24,7 +26,8 @@
     "desc": "Indica el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
     "saved": "El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b>.",
     "changed": "¡Lo cambio! El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b> en vez de <b>%v</b> bayas.",
-    "invalid_date": "La fecha que has introducido no cumple el formato <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>"
+    "invalid_date": "La fecha que has introducido no cumple el formato <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>",
+    "no_market_today": "El día <b>%s</b> es día de compra (<b>%s</b>), el mercado de ventas está cerrado."
   },
   "list": {
     "cmd": "lista",
@@ -47,6 +50,6 @@
   "changetz": {
     "cmd": "horario",
     "params": "[zona horaria]",
-    "desc": "Indica la zona horaria del grupo, solo para administradores del grupo. (Ver 'TZ database name': https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
+    "desc": "Indica la zona horaria del grupo. Ver <code>TZ database name</code>: %v"
   }
 }

@@ -25,6 +25,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	tzListURL = "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+)
+
 // handleStart triggers when /start is sent on private
 func (t *Telegram) handleStart(m *tb.Message) {
 	if !m.Private() {
@@ -64,17 +68,18 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 		Msg(m.Text)
 
 	helpLines := []string{
-		"Estos son los comandos disponibles:",
+		texts.Help.AvailableCmds,
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Help.Cmd, texts.Help.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.List.Cmd, texts.List.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Chart.Cmd, texts.Chart.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
+		"\n" + texts.Help.AdminCmds,
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Delete.Cmd, texts.Delete.Params, texts.Delete.Desc),
-		//fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, texts.ChangeTZ.Desc),
+		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, fmt.Sprintf(texts.ChangeTZ.Desc, tzListURL)),
 	}
 
-	t.reply(m, strings.Join(helpLines, "\n"), tb.NoPreview)
+	t.send(m.Chat, strings.Join(helpLines, "\n"), tb.NoPreview)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
@@ -164,6 +169,12 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	if len(parameters) == 1 {
 		new, oldBells, date, err = db.SaveUserCurrentPrice(m.Sender, m.Chat, bells)
 		if err != nil {
+			if err == ErrBuyDay {
+				rm := t.reply(m, fmt.Sprintf(texts.Sell.NoMarketToday, date, texts.Days[turnipSellDay]))
+				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+				return
+			}
+
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
@@ -173,6 +184,12 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 		if err != nil {
 			if err == ErrDateParse {
 				rm := t.reply(m, fmt.Sprintf(texts.Sell.InvalidDate, strings.Join(parameters[1:], " ")))
+				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+				return
+			}
+
+			if err == ErrBuyDay {
+				rm := t.reply(m, fmt.Sprintf(texts.Sell.NoMarketToday, date, texts.Days[turnipSellDay]))
 				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 				return
 			}
