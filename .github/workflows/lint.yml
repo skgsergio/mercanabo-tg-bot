@@ -30,7 +30,7 @@ jobs:
         run: echo "::add-path::$(go env GOPATH)/bin"
 
       - name: Install tools
-        run: go get -u golang.org/x/lint/golint honnef.co/go/tools/cmd/staticcheck github.com/kisielk/errcheck github.com/securego/gosec/cmd/gosec
+        run: go get -u golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow golang.org/x/lint/golint honnef.co/go/tools/cmd/staticcheck github.com/kisielk/errcheck github.com/securego/gosec/cmd/gosec
 
       - name: Get Go dependencies
         run: go get
@@ -48,6 +48,10 @@ jobs:
       - name: Run go vet
         if: always()
         run: go vet
+
+      - name: Run go vet -vettool shadow
+        if: always()
+        run: go vet -vettool $(which shadow)
 
       - name: Run golint
         if: always()
