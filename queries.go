@@ -60,14 +60,18 @@ func (d *Database) GetGroup(c *tb.Chat) (*Group, error) {
 		group.Title = c.Title
 		group.TZ = defaultTZ
 
-		d.DB.Create(&group)
+		err = d.DB.Create(&group).Error
 	} else if group.Title != c.Title {
 		group.Title = c.Title
 
-		d.DB.Save(&group)
+		err = d.DB.Save(&group).Error
 	}
 
-	return group, nil
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Bool("new_record", d.DB.NewRecord(group)).Msg("error saving group")
+	}
+
+	return group, err
 }
 
 // GetUser returns the user entity given a telegram user entity updating the its data if changed, if doesnt exist just creates and returns it
@@ -87,7 +91,7 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 		user.LastName = u.LastName
 		user.Username = u.Username
 
-		d.DB.Create(&user)
+		err = d.DB.Create(&user).Error
 	} else {
 		changed := false
 		if user.FirstName != u.FirstName {
@@ -106,11 +110,15 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 		}
 
 		if changed {
-			d.DB.Save(&user)
+			err = d.DB.Save(&user).Error
 		}
 	}
 
-	return user, nil
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Bool("new_record", d.DB.NewRecord(user)).Msg("error saving user")
+	}
+
+	return user, err
 }
 
 // GetUserAndGroup returns the user and group database entities given the user and chat telegram entities
@@ -175,10 +183,9 @@ func (d *Database) getUserIslandPrice(u *User, g *Group) (*IslandPrice, error) {
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting island price")
-		return nil, err
 	}
 
-	return islandPrice, nil
+	return islandPrice, err
 }
 
 // saveUserIslandPrice sets the buy price in an user island
@@ -255,14 +262,40 @@ func (d *Database) getUserWeekOwned(u *User, g *Group) (*Owned, error) {
 	).First(&owned).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		log.Error().Str("module", "database").Err(err).Msg("error getting owned")
-		return nil, err
+		log.Error().Str("module", "database").Err(err).Msg("error getting user owned")
 	}
 
-	return owned, nil
+	return owned, err
 }
 
 /* Public methods */
+
+// GetGroupWeekOwned returns owned turnips by all the users in a group this week
+func (d *Database) GetGroupWeekOwned(c *tb.Chat) ([]*Owned, error) {
+	// Get group
+	group, err := d.GetGroup(c)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get now config with group timezone
+	nowCfg, err := group.NowConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	bowDate := nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
+
+	// Query current group owneds
+	owneds := []*Owned{}
+
+	err = d.DB.Set("gorm:auto_preload", true).Where("group_id = ? AND date = ?", group.ID, bowDate).Order("units DESC").Find(&owneds).Error
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error getting group owneds")
+	}
+
+	return owneds, err
+}
 
 // GetUserWeekOwned returns owned turnips by the user this week
 func (d *Database) GetUserWeekOwned(u *tb.User, c *tb.Chat) (*Owned, error) {
@@ -311,7 +344,7 @@ func (d *Database) SaveThisWeekOwned(u *tb.User, c *tb.Chat, units uint32, bells
 	}
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving owned")
+		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving user owned")
 	}
 
 	return new, oldUnits, oldBells, err
@@ -353,11 +386,10 @@ func (d *Database) getUserPrice(u *User, g *Group, t time.Time) (*Price, error) 
 	).First(&price).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		log.Error().Str("module", "database").Err(err).Msg("error getting price")
-		return nil, err
+		log.Error().Str("module", "database").Err(err).Msg("error getting user price")
 	}
 
-	return price, nil
+	return price, err
 }
 
 // saveUserPrice sets sell price at Nook's Cranny at a given time
@@ -388,7 +420,7 @@ func (d *Database) saveUserPrice(u *User, g *Group, bells uint32, t time.Time) (
 	}
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving price")
+		log.Error().Str("module", "database").Err(err).Bool("new", new).Msg("error saving user price")
 	}
 
 	return new, oldBells, t.Format(timeFormatAMPM), nil
@@ -396,8 +428,8 @@ func (d *Database) saveUserPrice(u *User, g *Group, bells uint32, t time.Time) (
 
 /* Public methods */
 
-// GetCurrentPrices gets current sell price at Nook's Cranny
-func (d *Database) GetCurrentPrices(c *tb.Chat) ([]*Price, string, error) {
+// GetGroupCurrentPrices gets current sell price at Nook's Cranny
+func (d *Database) GetGroupCurrentPrices(c *tb.Chat) ([]*Price, string, error) {
 	// Get group
 	group, err := d.GetGroup(c)
 	if err != nil {
@@ -427,11 +459,10 @@ func (d *Database) GetCurrentPrices(c *tb.Chat) ([]*Price, string, error) {
 
 	err = d.DB.Set("gorm:auto_preload", true).Where("group_id = ? AND date = ?", group.ID, reqDate).Order("bells DESC").Find(&prices).Error
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Msg("error getting prices")
-		return nil, reqDate.Format(timeFormatAMPM), err
+		log.Error().Str("module", "database").Err(err).Msg("error getting group prices")
 	}
 
-	return prices, reqDate.Format(timeFormatAMPM), nil
+	return prices, reqDate.Format(timeFormatAMPM), err
 }
 
 // GetUserWeekPrices gets current sell price at Nook's Cranny
@@ -464,11 +495,10 @@ func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat) ([]*Price, error) {
 	).Order("date ASC").Find(&prices).Error
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Msg("error getting prices")
-		return nil, err
+		log.Error().Str("module", "database").Err(err).Msg("error getting user prices")
 	}
 
-	return prices, nil
+	return prices, err
 }
 
 // SaveUserPrice sets sell price at Nook's Cranny at a given time

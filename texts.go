@@ -29,10 +29,10 @@ type Texts struct {
 	JoinText      string   `json:"join_text"`
 	InternalError string   `json:"internal_error"`
 	InvalidParams string   `json:"invalid_parameters"`
-	BellsName     string   `json:"bells_name"`
+	Unprivileged  string   `json:"unprivileged"`
+	Bells         string   `json:"bells"`
 	Days          []string `json:"days"`
 	DaysShort     []string `json:"days_short"`
-	Unprivileged  string   `json:"unprivileged"`
 
 	Help struct {
 		Cmd           string `json:"cmd"`
@@ -49,11 +49,12 @@ type Texts struct {
 	} `json:"admin"`
 
 	Buy struct {
-		Cmd     string `json:"cmd"`
-		Params  string `json:"params"`
-		Desc    string `json:"desc"`
-		Saved   string `json:"saved"`
-		Changed string `json:"changed"`
+		Cmd         string `json:"cmd"`
+		Params      string `json:"params"`
+		Desc        string `json:"desc"`
+		Saved       string `json:"saved"`
+		Changed     string `json:"changed"`
+		UnitsModTen string `json:"units_mod_ten"`
 	} `json:"buy"`
 
 	IslandPrice struct {
@@ -87,6 +88,13 @@ type Texts struct {
 		Desc     string `json:"desc"`
 		NoPrices string `json:"no_prices"`
 	} `json:"chart"`
+
+	Turnips struct {
+		Cmd      string `json:"cmd"`
+		Desc     string `json:"desc"`
+		Owneds   string `json:"owneds"`
+		NoOwneds string `json:"no_owneds"`
+	} `json:"turnips"`
 
 	Delete struct {
 		Cmd      string `json:"cmd"`

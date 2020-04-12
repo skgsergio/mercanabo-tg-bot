@@ -40,7 +40,6 @@ a volume for persistence, and a bot container, that is build from local source.
 
 ## TODO
 
-- Charts, everything is better with them. STONKS 📉 📈
 - Implement the forecaster ([resources](forecast/README.md))
 
 ## License

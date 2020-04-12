@@ -3,10 +3,10 @@
   "join_text": "Mercanabo ahora está disponible en este grupo.\nLa zona horaria es <code>%v</code>\n\nPara saber como funciona el bot usa /%v",
   "internal_error": "¡Ups! Se ha producido un error interno del bot.",
   "invalid_parameters": "Parametros inválidos para el comando:",
-  "bells_name": "bayas",
+  "unprivileged": "No tienes permisos para hacer eso.",
+  "bells": "bayas",
   "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
   "days_short": ["Dom.", "Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb."],
-  "unprivileged": "No tienes permisos para hacer eso.",
   "help": {
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?",
@@ -24,7 +24,8 @@
     "params": "[cantidad] [precio de compra] [precio en tu isla, opcional]",
     "desc": "Indica el número de nabos y el precio al que has comprado. Si has comprado fuera de tu isla pon como tercer parametro el precio en tu isla.",
     "saved": "Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
-    "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad."
+    "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
+    "units_mod_ten": "La cantidad no es múltiplo de 10, revisa la cantidad que has comprado y vuelve a intentarlo."
   },
   "island_price": {
     "cmd": "precioisla",
@@ -44,7 +45,7 @@
   },
   "list": {
     "cmd": "lista",
-    "desc": "Lista el top 10 de precios actuales del grupo.",
+    "desc": "Lista los precios actuales del grupo.",
     "owned": "Esta semana %v ha comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "prices": "Precios de venta con fecha <b>%v</b>:",
     "no_prices": "No hay precios de venta con fecha <b>%v</b>."
@@ -53,6 +54,12 @@
     "cmd": "grafica",
     "desc": "Muestra tu gráfica de precios de esta semana.",
     "no_prices": "No tienes precios registrados esta semana."
+  },
+  "turnips": {
+    "cmd": "nabos",
+    "desc": "Lista los nabos del grupo.",
+    "owneds": "Lista de nabos por usuario:",
+    "no_owneds": "Nadie tiene nabos."
   },
   "delete": {
     "cmd": "borrado",

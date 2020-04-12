@@ -121,7 +121,7 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 			},
 		},
 		YAxis: chart.YAxis{
-			Name: texts.BellsName,
+			Name: texts.Bells,
 		},
 		Series: graphSeries,
 	}

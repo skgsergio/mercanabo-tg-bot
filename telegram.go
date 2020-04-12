@@ -74,6 +74,7 @@ func (t *Telegram) registerHandlers() {
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Sell.Cmd), t.handleSellCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.List.Cmd), t.handleListCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Chart.Cmd), t.handleChartCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.Turnips.Cmd), t.handleTurnipsCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Delete.Cmd), t.handleDeleteCmd)
 
 	t.handlersRegistered = true

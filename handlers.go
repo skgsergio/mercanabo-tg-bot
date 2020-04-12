@@ -17,6 +17,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -73,6 +74,7 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Admin.Cmd, texts.Admin.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.List.Cmd, texts.List.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Chart.Cmd, texts.Chart.Desc),
+		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Turnips.Cmd, texts.Turnips.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.IslandPrice.Cmd, texts.IslandPrice.Params, fmt.Sprintf(texts.IslandPrice.Desc, texts.Buy.Cmd)),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
@@ -123,7 +125,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 2 && len(parameters) != 3 {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
@@ -131,7 +133,13 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	units, err := parseUint32(parameters[0])
 	bells, err2 := parseUint32(parameters[1])
 	if err != nil || err2 != nil {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	if math.Mod(float64(units), 10) != 0 {
+		rm := t.reply(m, texts.Buy.UnitsModTen)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
@@ -140,7 +148,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if len(parameters) == 3 {
 		islandPrice, err = parseUint32(parameters[2])
 		if err != nil {
-			rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+			rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
 		}
@@ -198,14 +206,14 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 1 {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
 	islandPrice, err := parseUint32(parameters[0])
 	if err != nil {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
@@ -246,14 +254,14 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 1 && len(parameters) != 3 {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Sell.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Sell.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
 	bells, err := parseUint32(parameters[0])
 	if err != nil {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Sell.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Sell.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
@@ -331,7 +339,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 
 	cost := int64(owned.Units * owned.Bells)
 
-	prices, date, err := db.GetCurrentPrices(m.Chat)
+	prices, date, err := db.GetGroupCurrentPrices(m.Chat)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
@@ -341,7 +349,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	var reply string
 
 	if cost > 0 {
-		mention := fmt.Sprintf("<a href=\"tg://user?id=%v\">%v</a>", m.Sender.ID, m.Sender.FirstName)
+		mention := fmt.Sprintf("<a href=\"tg://user?id=%v\">%s</a>", m.Sender.ID, m.Sender.FirstName)
 
 		if len(m.Sender.Username) > 0 {
 			mention = "@" + m.Sender.Username
@@ -362,7 +370,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 				reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
 			}
 
-			reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.BellsName)
+			reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.Bells)
 
 			if cost > 0 {
 				var profits int64 = int64(owned.Units*price.Bells) - cost
@@ -373,7 +381,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 					reply += " 📉 "
 				}
 
-				reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.BellsName)
+				reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.Bells)
 			}
 		}
 	}
@@ -464,6 +472,53 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
+// handleTurnipsCmd triggers when the turnips cmd is sent to a group, if sent in private the user will be warned
+func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	// Get owneds
+	owneds, err := db.GetGroupWeekOwned(m.Chat)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	var reply string
+	if len(owneds) == 0 {
+		reply = texts.Turnips.NoOwneds
+	} else {
+		reply = texts.Turnips.Owneds + "\n"
+		for _, owned := range owneds {
+			reply += "\n" + owned.User.Name()
+
+			if owned.User.Username != "" {
+				reply += fmt.Sprintf(" (<code>@%s</code>)", owned.User.Username)
+			}
+
+			reply += fmt.Sprintf(
+				": <b>%v</b> x <b>%v</b> %s = <b>%v</b> %s",
+				owned.Units,
+				owned.Bells, texts.Bells,
+				owned.Units*owned.Bells, texts.Bells,
+			)
+		}
+	}
+
+	t.send(m.Chat, reply)
+	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+}
+
 // handleDeleteCmd triggers when the delete cmd is sent to a group, if sent in private the user will be warned
 func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	if m.Private() {
@@ -505,7 +560,7 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	// Parse payload
 	seconds, err := parseUint8(m.Payload)
 	if err != nil || seconds > 30 {
-		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Delete.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
