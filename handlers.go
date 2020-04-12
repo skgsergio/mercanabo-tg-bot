@@ -341,7 +341,13 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	var reply string
 
 	if cost > 0 {
-		reply += fmt.Sprintf(texts.List.Owned, owned.Units, owned.Bells) + "\n\n"
+		mention := fmt.Sprintf("<a href=\"tg://user?id=%v\">%v</a>", m.Sender.ID, m.Sender.FirstName)
+
+		if len(m.Sender.Username) > 0 {
+			mention = "@" + m.Sender.Username
+		}
+
+		reply += fmt.Sprintf(texts.List.Owned, mention, owned.Units, owned.Bells) + "\n\n"
 	}
 
 	if len(prices) == 0 {

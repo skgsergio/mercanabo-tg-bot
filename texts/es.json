@@ -45,7 +45,7 @@
   "list": {
     "cmd": "lista",
     "desc": "Lista el top 10 de precios actuales del grupo.",
-    "owned": "Esta semana compraste <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
+    "owned": "Esta semana %v ha comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "prices": "Precios de venta con fecha <b>%v</b>:",
     "no_prices": "No hay precios de venta con fecha <b>%v</b>."
   },
