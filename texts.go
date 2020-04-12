@@ -38,8 +38,15 @@ type Texts struct {
 		Cmd           string `json:"cmd"`
 		Desc          string `json:"desc"`
 		AvailableCmds string `json:"available_cmds"`
+		CmdAdmin      string `json:"cmd_admin"`
 		AdminCmds     string `json:"admin_cmds"`
 	} `json:"help"`
+
+	Admin struct {
+		Cmd           string `json:"cmd"`
+		Desc          string `json:"desc"`
+		AvailableCmds string `json:"available_cmds"`
+	} `json:"admin"`
 
 	Buy struct {
 		Cmd     string `json:"cmd"`
@@ -48,6 +55,14 @@ type Texts struct {
 		Saved   string `json:"saved"`
 		Changed string `json:"changed"`
 	} `json:"buy"`
+
+	IslandPrice struct {
+		Cmd     string `json:"cmd"`
+		Params  string `json:"params"`
+		Desc    string `json:"desc"`
+		Saved   string `json:"saved"`
+		Changed string `json:"changed"`
+	} `json:"island_price"`
 
 	Sell struct {
 		Cmd           string `json:"cmd"`

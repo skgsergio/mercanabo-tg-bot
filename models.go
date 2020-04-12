@@ -82,7 +82,7 @@ type Price struct {
 	UserID  int64     `gorm:"INDEX;NOT NULL"`
 	User    User      `gorm:"FOREIGNKEY:UserID"`
 	Bells   uint32    `gorm:"NOT NULL;DEFAULT:0"`
-	Date    time.Time `gorm:"INDEX;NOT NULL;DEFAULT:0"`
+	Date    time.Time `gorm:"INDEX;NOT NULL"`
 }
 
 // Owned represents how many turnips owns an User in a Group in a given date
@@ -98,6 +98,18 @@ type Owned struct {
 	Date    time.Time `gorm:"INDEX;NOT NULL"`
 }
 
+// IslandPrice is the price of the User island.
+// This allows to buy in other island not your own but storing your island price that is important for the forecasts.
+type IslandPrice struct {
+	ID      uint64    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;NOT NULL"`
+	GroupID int64     `gorm:"INDEX;NOT NULL"`
+	Group   Group     `gorm:"FOREIGNKEY:GroupID"`
+	UserID  int64     `gorm:"INDEX;NOT NULL"`
+	User    User      `gorm:"FOREIGNKEY:UserID"`
+	Bells   uint32    `gorm:"NOT NULL;DEFAULT:0"`
+	Date    time.Time `gorm:"INDEX;NOT NULL"`
+}
+
 // SetupDB runs database migrations
 func (d *Database) SetupDB() {
 	log.Info().Str("module", "database").Msg("running database migrations")
@@ -107,6 +119,7 @@ func (d *Database) SetupDB() {
 		&User{},
 		&Price{},
 		&Owned{},
+		&IslandPrice{},
 	)
 
 	// Add the FKs
@@ -117,4 +130,8 @@ func (d *Database) SetupDB() {
 	ownedModel := d.DB.Model(&Owned{})
 	ownedModel.AddForeignKey("group_id", "groups(id)", "CASCADE", "CASCADE")
 	ownedModel.AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+
+	islandPriceModel := d.DB.Model(&IslandPrice{})
+	islandPriceModel.AddForeignKey("group_id", "groups(id)", "CASCADE", "CASCADE")
+	islandPriceModel.AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 }

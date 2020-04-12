@@ -70,11 +70,34 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 	helpLines := []string{
 		texts.Help.AvailableCmds,
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Help.Cmd, texts.Help.Desc),
+		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Admin.Cmd, texts.Admin.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.List.Cmd, texts.List.Desc),
 		fmt.Sprintf("\n<code>/%s</code>\n%s", texts.Chart.Cmd, texts.Chart.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Buy.Cmd, texts.Buy.Params, texts.Buy.Desc),
+		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.IslandPrice.Cmd, texts.IslandPrice.Params, fmt.Sprintf(texts.IslandPrice.Desc, texts.Buy.Cmd)),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Sell.Cmd, texts.Sell.Params, texts.Sell.Desc),
-		"\n" + texts.Help.AdminCmds,
+	}
+
+	t.send(m.Chat, strings.Join(helpLines, "\n"), tb.NoPreview)
+	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+}
+
+// handleAdminCmd triggers when the admin cmd is sent to a group
+func (t *Telegram) handleAdminCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	helpLines := []string{
+		texts.Admin.AvailableCmds,
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Delete.Cmd, texts.Delete.Params, texts.Delete.Desc),
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.ChangeTZ.Cmd, texts.ChangeTZ.Params, fmt.Sprintf(texts.ChangeTZ.Desc, tzListURL)),
 	}
@@ -99,34 +122,110 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
-	if len(parameters) != 2 {
+	if len(parameters) != 2 && len(parameters) != 3 {
 		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
-	units, erru := parseUint32(parameters[0])
-	bells, errb := parseUint32(parameters[1])
-	if erru != nil || errb != nil {
+	units, err := parseUint32(parameters[0])
+	bells, err2 := parseUint32(parameters[1])
+	if err != nil || err2 != nil {
 		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
+	}
+
+	islandPrice := bells
+	if len(parameters) == 3 {
+		islandPrice, err = parseUint32(parameters[2])
+		if err != nil {
+			rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+			return
+		}
 	}
 
 	// Store user turnips
-	new, oldUnits, oldBells, err := db.SaveThisWeekOwned(m.Sender, m.Chat, units, bells)
+	newO, oldUnits, oldBells, err := db.SaveThisWeekOwned(m.Sender, m.Chat, units, bells)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
-	var rm *tb.Message
-	if new {
-		rm = t.reply(m, fmt.Sprintf(texts.Buy.Saved, units, bells))
+	var msgTxt1 string
+	if newO || (oldUnits == units && oldBells == bells) {
+		msgTxt1 = fmt.Sprintf(texts.Buy.Saved, units, bells)
 	} else {
-		rm = t.reply(m, fmt.Sprintf(texts.Buy.Changed, units, bells, oldUnits, oldBells))
+		msgTxt1 = fmt.Sprintf(texts.Buy.Changed, units, bells, oldUnits, oldBells)
 	}
+
+	// Store island price
+	newIP, oldIslandPrice, err := db.SaveUserIslandPrice(m.Sender, m.Chat, islandPrice)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	var msgTxt2 string
+	if newIP || (oldIslandPrice == islandPrice) {
+		msgTxt2 = fmt.Sprintf(texts.IslandPrice.Saved, islandPrice)
+	} else {
+		msgTxt2 = fmt.Sprintf(texts.IslandPrice.Changed, islandPrice, oldIslandPrice)
+	}
+
+	// Send reply
+	rm := t.reply(m, fmt.Sprintf("%s\n\n%s", msgTxt1, msgTxt2))
+	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+}
+
+// handleIslandPriceCmd triggers when the islandprice cmd is sent to a group, if sent in private the user will be warned
+func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	// Validate the parameters
+	parameters := strings.Fields(m.Payload)
+	if len(parameters) != 1 {
+		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	islandPrice, err := parseUint32(parameters[0])
+	if err != nil {
+		rm := t.reply(m, fmt.Sprintf("%v %v", texts.InvalidParams, texts.Buy.Params))
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	// Store island price
+	newIP, oldIslandPrice, err := db.SaveUserIslandPrice(m.Sender, m.Chat, islandPrice)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	var msgTxt string
+	if newIP || (oldIslandPrice == islandPrice) {
+		msgTxt = fmt.Sprintf(texts.IslandPrice.Saved, islandPrice)
+	} else {
+		msgTxt = fmt.Sprintf(texts.IslandPrice.Changed, islandPrice, oldIslandPrice)
+	}
+
+	rm := t.reply(m, msgTxt)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 }
 

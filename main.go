@@ -83,7 +83,7 @@ func main() {
 	if envtz := os.Getenv("MERCANABO_DEFAULT_TZ"); envtz != "" {
 		defaultTZ = envtz
 
-		if _, err := time.LoadLocation(defaultTZ); err != nil {
+		if _, err = time.LoadLocation(defaultTZ); err != nil {
 			log.Fatal().Str("module", "main").Str("timezone", defaultTZ).Err(err).Msg("failed loading time zone")
 		}
 	}
@@ -93,8 +93,9 @@ func main() {
 	// Load superadmin list
 	if envsa := os.Getenv("MERCANABO_SUPERADMINS"); envsa != "" {
 		for _, uidStr := range strings.Split(envsa, ",") {
-			uid, err := parseInt64(uidStr)
-			if err != nil {
+			uid, errp := parseInt64(uidStr)
+
+			if errp != nil {
 				log.Fatal().Str("module", "main").Err(err).Msg("failed parsing superadmins list")
 			}
 

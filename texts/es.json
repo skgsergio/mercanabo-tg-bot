@@ -11,14 +11,27 @@
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?",
     "available_cmds": "Comandos disponibles:",
+    "cmd_admin": "admin",
     "admin_cmds": "Comandos para administradores:"
+  },
+  "admin": {
+    "cmd": "admin",
+    "desc": "Muestra los comandos para admnistradores",
+    "available_cmds": "Comandos disponibles:"
   },
   "buy": {
     "cmd": "compra",
-    "params": "[cantidad] [precio]",
-    "desc": "Indica el número de nabos y el precio al que has comprado.",
+    "params": "[cantidad] [precio de compra] [precio en tu isla, opcional]",
+    "desc": "Indica el número de nabos y el precio al que has comprado. Si has comprado fuera de tu isla pon como tercer parametro el precio en tu isla.",
     "saved": "Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad."
+  },
+  "island_price": {
+    "cmd": "precioisla",
+    "params": "[precio de compra en tu isla]",
+    "desc": "Indica el precio de compra en tu isla. Si has comprado en otra isla y usado el comando <code>/%s</code> sin indicar el precio de tu isla puedes cambiarlo con este comando.",
+    "saved": "El precio de compra de tu isla es de <b>%v</b> bayas/unidad.",
+    "changed": "¡Lo cambio! El precio de compra de tu isla es de <b>%v</b> bayas/unidad en vez de <b>%v</b> bayas/unidad."
   },
   "sell": {
     "cmd": "venta",
