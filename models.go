@@ -50,8 +50,8 @@ func (g *Group) NowConfig() (*now.Config, error) {
 type User struct {
 	ID        int64  `gorm:"PRIMARY_KEY;NOT NULL"`
 	FirstName string `gorm:"NOT NULL;DEFAULT:''"`
-	LastName  string `gorm:"NOT NULL;DEFAULT:''"`
-	Username  string `gorm:"NOT NULL;DEFAULT:''"`
+	LastName  string `gorm:"DEFAULT:''"`
+	Username  string `gorm:"DEFAULT:''"`
 }
 
 // Name returns the full name of the User
