@@ -364,13 +364,15 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 		reply += fmt.Sprintf(texts.List.Prices, date) + "\n"
 
 		for _, price := range prices {
-			reply += "\n" + price.User.Name()
+			reply += "\n<code>"
 
-			if price.User.Username != "" {
-				reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
+			if owned.User.Username != "" {
+				reply += fmt.Sprintf("@%s", owned.User.Username)
+			} else {
+				reply += owned.User.Name()
 			}
 
-			reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.Bells)
+			reply += fmt.Sprintf("</code>: <b>%v</b> %s", price.Bells, texts.Bells)
 
 			if cost > 0 {
 				var profits int64 = int64(owned.Units*price.Bells) - cost
@@ -381,7 +383,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 					reply += " 📉 "
 				}
 
-				reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.Bells)
+				reply += fmt.Sprintf("<b>%v</b>", profits)
 			}
 		}
 	}
@@ -500,17 +502,19 @@ func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
 	} else {
 		reply = texts.Turnips.Owneds + "\n"
 		for _, owned := range owneds {
-			reply += "\n" + owned.User.Name()
+			reply += "\n<code>"
 
 			if owned.User.Username != "" {
-				reply += fmt.Sprintf(" (<code>@%s</code>)", owned.User.Username)
+				reply += fmt.Sprintf("@%s", owned.User.Username)
+			} else {
+				reply += owned.User.Name()
 			}
 
 			reply += fmt.Sprintf(
-				": <b>%v</b> x <b>%v</b> %s = <b>%v</b> %s",
+				"</code>: <b>%v</b> x <b>%v</b> %s = <b>%v</b>",
 				owned.Units,
 				owned.Bells, texts.Bells,
-				owned.Units*owned.Bells, texts.Bells,
+				owned.Units*owned.Bells,
 			)
 		}
 	}
