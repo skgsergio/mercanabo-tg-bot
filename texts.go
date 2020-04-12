@@ -75,15 +75,17 @@ type Texts struct {
 	} `json:"sell"`
 
 	List struct {
-		Cmd         string `json:"cmd"`
-		Desc        string `json:"desc"`
-		ReplyOwned  string `json:"reply_owned"`
-		ReplyPrices string `json:"reply_prices"`
+		Cmd      string `json:"cmd"`
+		Desc     string `json:"desc"`
+		Owned    string `json:"owned"`
+		Prices   string `json:"prices"`
+		NoPrices string `json:"no_prices"`
 	} `json:"list"`
 
 	Chart struct {
-		Cmd  string `json:"cmd"`
-		Desc string `json:"desc"`
+		Cmd      string `json:"cmd"`
+		Desc     string `json:"desc"`
+		NoPrices string `json:"no_prices"`
 	} `json:"chart"`
 
 	Delete struct {

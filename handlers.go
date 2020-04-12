@@ -341,29 +341,34 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	var reply string
 
 	if cost > 0 {
-		reply += fmt.Sprintf(texts.List.ReplyOwned, owned.Units, owned.Bells) + "\n\n"
+		reply += fmt.Sprintf(texts.List.Owned, owned.Units, owned.Bells) + "\n\n"
 	}
 
-	reply += fmt.Sprintf(texts.List.ReplyPrices, date) + "\n"
-	for _, price := range prices {
-		reply += "\n" + price.User.Name()
+	if len(prices) == 0 {
+		reply += fmt.Sprintf(texts.List.NoPrices, date)
+	} else {
+		reply += fmt.Sprintf(texts.List.Prices, date) + "\n"
 
-		if price.User.Username != "" {
-			reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
-		}
+		for _, price := range prices {
+			reply += "\n" + price.User.Name()
 
-		reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.BellsName)
-
-		if cost > 0 {
-			var profits int64 = int64(owned.Units*price.Bells) - cost
-
-			if profits > 0 {
-				reply += " 📈 "
-			} else {
-				reply += " 📉 "
+			if price.User.Username != "" {
+				reply += fmt.Sprintf(" (<code>@%s</code>)", price.User.Username)
 			}
 
-			reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.BellsName)
+			reply += fmt.Sprintf(": <b>%v</b> %s", price.Bells, texts.BellsName)
+
+			if cost > 0 {
+				var profits int64 = int64(owned.Units*price.Bells) - cost
+
+				if profits > 0 {
+					reply += " 📈 "
+				} else {
+					reply += " 📉 "
+				}
+
+				reply += fmt.Sprintf("<b>%v</b> %s", profits, texts.BellsName)
+			}
 		}
 	}
 
@@ -408,6 +413,12 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		return
 	}
 
+	if len(prices) == 0 {
+		rm := t.reply(m, texts.Chart.NoPrices)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
 	// Get owned
 	owned, err := db.GetUserWeekOwned(m.Sender, m.Chat)
 	if err != nil {
@@ -420,11 +431,10 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	xValues := make([]time.Time, 12)
 	yValues := make([]float64, 12)
 
-	groupNow.WeekStartDay = time.Monday
-	bowDate := groupNow.With(time.Now().In(groupNow.TimeLocation)).BeginningOfWeek()
+	initDate := groupNow.With(time.Now().In(groupNow.TimeLocation)).BeginningOfWeek().Add(time.Hour * 24)
 
 	for i := 0; i < 12; i++ {
-		xValues[i] = bowDate.Add(time.Hour * 12 * time.Duration(i))
+		xValues[i] = initDate.Add(time.Hour * 12 * time.Duration(i))
 	}
 
 	for _, price := range prices {
