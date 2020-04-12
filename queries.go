@@ -183,9 +183,10 @@ func (d *Database) getUserIslandPrice(u *User, g *Group) (*IslandPrice, error) {
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting island price")
+		return nil, err
 	}
 
-	return islandPrice, err
+	return islandPrice, nil
 }
 
 // saveUserIslandPrice sets the buy price in an user island
@@ -263,9 +264,10 @@ func (d *Database) getUserWeekOwned(u *User, g *Group) (*Owned, error) {
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting user owned")
+		return nil, err
 	}
 
-	return owned, err
+	return owned, nil
 }
 
 /* Public methods */
@@ -387,9 +389,10 @@ func (d *Database) getUserPrice(u *User, g *Group, t time.Time) (*Price, error) 
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting user price")
+		return nil, err
 	}
 
-	return price, err
+	return price, nil
 }
 
 // saveUserPrice sets sell price at Nook's Cranny at a given time

@@ -52,6 +52,8 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
+	log.Logger = log.With().Caller().Logger()
+
 	// Check required env vars
 	for _, envVar := range []string{
 		"MERCANABO_TOKEN",

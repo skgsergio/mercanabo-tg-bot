@@ -57,10 +57,10 @@ func (ZerologGorm) Print(v ...interface{}) {
 		log.Debug().
 			Str("module", "gorm").
 			Fields(map[string]interface{}{
-				"type":   v[0],
-				"rows":   v[5],
-				"src":    v[1],
-				"values": v[4],
+				"type":      v[0],
+				"rows":      v[5],
+				"query_src": v[1],
+				"values":    v[4],
 			}).
 			Msg(fmt.Sprintf("%v", v[3]))
 
