@@ -366,10 +366,10 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 		for _, price := range prices {
 			reply += "\n<code>"
 
-			if owned.User.Username != "" {
-				reply += fmt.Sprintf("@%s", owned.User.Username)
+			if price.User.Username != "" {
+				reply += fmt.Sprintf("@%s", price.User.Username)
 			} else {
-				reply += owned.User.Name()
+				reply += price.User.Name()
 			}
 
 			reply += fmt.Sprintf("</code>: <b>%v</b> %s", price.Bells, texts.Bells)
