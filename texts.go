@@ -34,6 +34,28 @@ type Texts struct {
 	Days          []string `json:"days"`
 	DaysShort     []string `json:"days_short"`
 
+	Patterns struct {
+		Random struct {
+			Name string `json:"name"`
+			Desc string `json:"desc"`
+		} `json:"random"`
+
+		BigSpike struct {
+			Name string `json:"name"`
+			Desc string `json:"desc"`
+		} `json:"big_spike"`
+
+		Falling struct {
+			Name string `json:"name"`
+			Desc string `json:"desc"`
+		} `json:"falling"`
+
+		SmallSpike struct {
+			Name string `json:"name"`
+			Desc string `json:"desc"`
+		} `json:"small_spike"`
+	} `json:"patterns"`
+
 	Help struct {
 		Cmd           string `json:"cmd"`
 		Desc          string `json:"desc"`

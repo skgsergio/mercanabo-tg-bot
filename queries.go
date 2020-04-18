@@ -226,6 +226,17 @@ func (d *Database) saveUserIslandPrice(u *User, g *Group, bells uint32) (bool, u
 
 /* Public methods */
 
+// GetUserIslandPrice sets the buy price in an user island
+func (d *Database) GetUserIslandPrice(u *tb.User, c *tb.Chat) (*IslandPrice, error) {
+	// Get user and group
+	user, group, err := d.GetUserAndGroup(u, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.getUserIslandPrice(user, group)
+}
+
 // SaveUserIslandPrice sets the buy price in an user island
 func (d *Database) SaveUserIslandPrice(u *tb.User, c *tb.Chat, bells uint32) (bool, uint32, error) {
 	// Get user and group

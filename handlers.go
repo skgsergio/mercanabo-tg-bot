@@ -443,9 +443,18 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		return
 	}
 
+	// Get island price
+	islandPrice, err := db.GetUserIslandPrice(m.Sender, m.Chat)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
 	// Craft data to have a good looking graph when data is missing
-	xValues := make([]time.Time, 12)
-	yValues := make([]float64, 12)
+	xValues := [12]time.Time{}
+	yValues := [12]float64{}
+	buyPrices := [12]uint32{}
 
 	initDate := groupNow.With(time.Now().In(groupNow.TimeLocation)).BeginningOfWeek().Add(time.Hour * 24)
 
@@ -457,13 +466,28 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		for i := range xValues {
 			if price.Date.Equal(xValues[i]) {
 				yValues[i] = float64(price.Bells)
+				buyPrices[i] = price.Bells
 				break
 			}
 		}
 	}
 
+	// Gen all matching patterns
+	var maxMin *[12]DayPrice = nil
+
+	if islandPrice != nil && islandPrice.Bells > 0 {
+		f, err := NewForecast(islandPrice.Bells, buyPrices)
+		if err != nil {
+			rm := t.reply(m, texts.InternalError)
+			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+			return
+		}
+
+		_, maxMin = f.GenAllPatterns()
+	}
+
 	// Generate chart
-	chart, err := TimeSeriesChart(user.String(), xValues, yValues, float64(owned.Bells), groupNow.TimeLocation, true)
+	chart, err := PricesChart(user.String(), &xValues, &yValues, float64(owned.Bells), maxMin, groupNow.TimeLocation, true)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})

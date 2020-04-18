@@ -7,6 +7,24 @@
   "bells": "bayas",
   "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
   "days_short": ["Dom.", "Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb."],
+  "patterns": {
+    "random": {
+      "name": "Aleatorio",
+      "desc": "Ganancias máximas 1.1~1.45x del precio de venta."
+    },
+    "big_spike": {
+      "name": "Gran pico",
+      "desc": "El segundo intervalo de subida será >= 1.4x del precio de venta y el tercer intervalo será de 2~6x."
+    },
+    "falling": {
+      "name": "Descendiente",
+      "desc": "100% pérdidas."
+    },
+    "small_spike": {
+      "name": "Pequeño pico",
+      "desc": "El segundo intercalo de subida será < 1.4x del precio de venta, el tercer intervalo será de 1.4~2x"
+    }
+  },
   "help": {
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?",

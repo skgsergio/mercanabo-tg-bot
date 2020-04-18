@@ -25,8 +25,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// TimeSeriesChart returns a chart given a slice of prices
-func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineValue float64, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
+// PricesChart returns a chart given a slice of prices
+func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lineValue float64, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
 	if addRangeTitle {
 		title += fmt.Sprintf(" | %s - %s", xValues[0].Format("2006-01-02"), xValues[len(xValues)-1].Format("2006-01-02"))
 	}
@@ -37,10 +37,10 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 	priceSeries := chart.TimeSeries{
 		Style: chart.Style{
 			StrokeColor: chart.ColorBlue,
-			FillColor:   chart.ColorBlue.WithAlpha(64),
+			FillColor:   chart.ColorTransparent,
 		},
-		XValues: xValues,
-		YValues: yValues,
+		XValues: xValues[:],
+		YValues: yValues[:],
 	}
 
 	graphSeries = append(graphSeries, priceSeries)
@@ -77,6 +77,37 @@ func TimeSeriesChart(title string, xValues []time.Time, yValues []float64, lineV
 	}
 
 	graphSeries = append(graphSeries, priceAnnotations)
+
+	// Create prediction series if any
+	if prediction != nil {
+		predMinSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor:     chart.ColorOrange,
+				StrokeDashArray: []float64{5.0, 5.0},
+				FillColor:       chart.ColorTransparent,
+			},
+			XValues: xValues[:],
+			YValues: []float64{},
+		}
+
+		predMaxSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor:     chart.ColorOrange,
+				StrokeDashArray: []float64{5.0, 5.0},
+				FillColor:       chart.ColorTransparent,
+			},
+			XValues: xValues[:],
+			YValues: []float64{},
+		}
+
+		for _, v := range prediction {
+			predMinSeries.YValues = append(predMinSeries.YValues, float64(v.Min))
+			predMaxSeries.YValues = append(predMaxSeries.YValues, float64(v.Max))
+		}
+
+		graphSeries = append(graphSeries, predMinSeries)
+		graphSeries = append(graphSeries, predMaxSeries)
+	}
 
 	// Create owned series if the lineValue is not 0
 	if lineValue != 0 {

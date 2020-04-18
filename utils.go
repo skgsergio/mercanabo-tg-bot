@@ -51,3 +51,19 @@ func parseInt64(s string) (int64, error) {
 
 	return int64(i), nil
 }
+
+func maxUint32(x, y uint32) uint32 {
+	if x < y {
+		return y
+	}
+
+	return x
+}
+
+func minUint32(x, y uint32) uint32 {
+	if x > y {
+		return y
+	}
+
+	return x
+}
