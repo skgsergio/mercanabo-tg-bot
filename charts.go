@@ -31,6 +31,17 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 		title += fmt.Sprintf(" | %s - %s", xValues[0].Format("2006-01-02"), xValues[len(xValues)-1].Format("2006-01-02"))
 	}
 
+	xxValues := []time.Time{}
+	yyValues := []float64{}
+
+	for i := range yValues {
+		if yValues[i] != 0 {
+			xxValues = append(xxValues, xValues[i])
+			yyValues = append(yyValues, yValues[i])
+		}
+	}
+
+	// Graph series slice
 	graphSeries := []chart.Series{}
 
 	// Create price series
@@ -39,8 +50,8 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 			StrokeColor: chart.ColorBlue,
 			FillColor:   chart.ColorTransparent,
 		},
-		XValues: xValues[:],
-		YValues: yValues[:],
+		XValues: xxValues,
+		YValues: yyValues,
 	}
 
 	graphSeries = append(graphSeries, priceSeries)
@@ -53,27 +64,25 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 		Annotations: []chart.Value2{},
 	}
 
-	// Create ticks for x axis
-	ticks := make([]chart.Tick, priceSeries.Len())
-
-	// Fill annotations and ticks
 	for i := 0; i < priceSeries.Len(); i++ {
 		x, y := priceSeries.GetValues(i)
-		t := TimeToShortDayAMPM(ChartValueToTime(x, location))
+		priceAnnotations.Annotations = append(
+			priceAnnotations.Annotations,
+			chart.Value2{
+				XValue: x,
+				YValue: y,
+				Label:  fmt.Sprintf("%v", y),
+			},
+		)
+	}
 
-		ticks[i].Value = x
-		ticks[i].Label = t
+	// Create ticks for x axis
+	ticks := make([]chart.Tick, len(xValues))
 
-		if y != 0 {
-			priceAnnotations.Annotations = append(
-				priceAnnotations.Annotations,
-				chart.Value2{
-					XValue: x,
-					YValue: y,
-					Label:  fmt.Sprintf("%v", y),
-				},
-			)
-		}
+	// Fill annotations and ticks
+	for i := 0; i < len(xValues); i++ {
+		ticks[i].Value = chart.TimeToFloat64(xValues[i])
+		ticks[i].Label = TimeToShortDayAMPM(xValues[i])
 	}
 
 	graphSeries = append(graphSeries, priceAnnotations)
@@ -117,11 +126,11 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 				StrokeColor:     chart.ColorRed,
 				StrokeDashArray: []float64{5.0, 5.0},
 			},
-			XValues: priceSeries.XValues,
-			YValues: make([]float64, len(priceSeries.XValues)),
+			XValues: xValues[:],
+			YValues: make([]float64, len(xValues)),
 		}
 
-		for i := range priceSeries.XValues {
+		for i := range ownedSeries.XValues {
 			ownedSeries.YValues[i] = lineValue
 		}
 

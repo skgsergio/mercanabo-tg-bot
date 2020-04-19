@@ -40,7 +40,6 @@ a volume for persistence, and a bot container, that is build from local source.
 
 ### TODO
 
-- Try to fix missing days in graphs showing as 0
 - Do not show admin help to non admin users
 - Implement TZ change cmd
 
