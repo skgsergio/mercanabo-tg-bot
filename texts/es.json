@@ -37,7 +37,7 @@
   },
   "admin": {
     "cmd": "admin",
-    "desc": "Muestra los comandos para admnistradores",
+    "desc": "Muestra los comandos para administradores",
     "available_cmds": "Comandos disponibles:"
   },
   "buy": {

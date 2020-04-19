@@ -477,8 +477,8 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	var maxMin *[12]DayPrice = nil
 
 	if islandPrice != nil && islandPrice.Bells > 0 {
-		f, err := NewForecast(islandPrice.Bells, buyPrices)
-		if err != nil {
+		f, errf := NewForecast(islandPrice.Bells, buyPrices)
+		if errf != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return

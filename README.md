@@ -38,6 +38,12 @@ To simplify the deployment there is a [Docker Compose](docker-compose.yml) file
 ready to use. You can just use it and it will deploy a postgresql container, with
 a volume for persistence, and a bot container, that is build from local source.
 
+### TODO
+
+- Try to fix missing days in graphs showing as 0
+- Do not show admin help to non admin users
+- Implement TZ change cmd
+
 ## License
 This project is licensed under the GPL 3.0 License. See the [LICENSE](LICENSE)
 file for details.
