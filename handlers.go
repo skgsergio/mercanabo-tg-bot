@@ -473,6 +473,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Gen all matching patterns
+	var patterns *[]*Pattern = nil
 	var maxMin *[12]DayPrice = nil
 
 	if islandPrice != nil && islandPrice.Bells > 0 {
@@ -483,7 +484,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 			return
 		}
 
-		_, maxMin = f.GenAllPatterns()
+		patterns, maxMin = f.GenAllPatterns()
 	}
 
 	// Generate chart
@@ -494,7 +495,42 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		return
 	}
 
-	t.send(m.Chat, &tb.Photo{File: tb.FromReader(chart)})
+	// Add pattern info as image caption
+	var caption string
+
+	if patterns == nil {
+		caption += texts.Patterns.NoIslandPrice
+	} else if len(*patterns) == 0 {
+		caption += texts.Patterns.Unknown
+	} else {
+		pats := map[PatternType]bool{
+			Random:     false,
+			BigSpike:   false,
+			Falling:    false,
+			SmallSpike: false,
+		}
+
+		for _, p := range *patterns {
+			pats[p.Type] = true
+		}
+
+		caption += texts.Patterns.Matching + "\n"
+
+		if pats[Random] {
+			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.Random.Name, texts.Patterns.Random.Desc)
+		}
+		if pats[BigSpike] {
+			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.BigSpike.Name, texts.Patterns.BigSpike.Desc)
+		}
+		if pats[Falling] {
+			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.Falling.Name, texts.Patterns.Falling.Desc)
+		}
+		if pats[SmallSpike] {
+			caption += fmt.Sprintf("- <b>%s</b>: %s", texts.Patterns.SmallSpike.Name, texts.Patterns.SmallSpike.Desc)
+		}
+	}
+
+	t.send(m.Chat, &tb.Photo{File: tb.FromReader(chart), Caption: caption})
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 

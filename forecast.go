@@ -533,7 +533,7 @@ func (f *Forecast) GenAllPatterns() (*[]*Pattern, *[12]DayPrice) {
 	patterns = append(patterns, f.GenSmallSpikePatterns()...)
 
 	if len(patterns) == 0 {
-		return nil, nil
+		return &patterns, nil
 	}
 
 	for i := range maxMin {

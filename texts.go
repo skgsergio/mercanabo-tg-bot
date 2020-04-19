@@ -54,6 +54,10 @@ type Texts struct {
 			Name string `json:"name"`
 			Desc string `json:"desc"`
 		} `json:"small_spike"`
+
+		Matching      string `json:"matching"`
+		Unknown       string `json:"unknown"`
+		NoIslandPrice string `json:"no_island_price"`
 	} `json:"patterns"`
 
 	Help struct {

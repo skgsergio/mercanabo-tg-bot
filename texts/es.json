@@ -10,11 +10,11 @@
   "patterns": {
     "random": {
       "name": "Aleatorio",
-      "desc": "Ganancias máximas 1.1~1.45x del precio de venta."
+      "desc": "pico máximo de venta 0.9~1.4x."
     },
     "big_spike": {
       "name": "Gran pico",
-      "desc": "El segundo intervalo de subida será >= 1.4x del precio de venta y el tercer intervalo será de 2~6x."
+      "desc": "el segundo medio día de subida será mayor o igual 1.4x, el tercer medio día de subida es el máximo 2~6x."
     },
     "falling": {
       "name": "Descendiente",
@@ -22,8 +22,11 @@
     },
     "small_spike": {
       "name": "Pequeño pico",
-      "desc": "El segundo intercalo de subida será < 1.4x del precio de venta, el tercer intervalo será de 1.4~2x"
-    }
+      "desc": "el segundo medio día de subida será menor o igual 1.4x (puede ser menor al primer medio dia de subida y verse un doble pico), el tercer medio día de subida es el máximo 1.4~2x."
+    },
+    "matching": "Posibles patrones:",
+    "unknown": "No se ha podido determinar el patrón.",
+    "no_island_price": "No se conoce el precio de compra de tu isla, no se pueden realizar predicciones."
   },
   "help": {
     "cmd": "ayuda",
