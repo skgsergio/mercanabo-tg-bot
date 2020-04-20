@@ -26,11 +26,64 @@ import (
 )
 
 // PricesChart returns a chart given a slice of prices
-func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lineValue float64, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
+func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, ownedValue float64, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
 	if addRangeTitle {
 		title += fmt.Sprintf(" | %s - %s", xValues[0].Format("2006-01-02"), xValues[len(xValues)-1].Format("2006-01-02"))
 	}
 
+	// Graph series slice
+	graphSeries := []chart.Series{}
+
+	// Create owned series if the ownedValue is not 0
+	if ownedValue != 0 {
+		// Dashed line marking buy price
+		ownedSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor:     chart.ColorRed,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
+			XValues: []time.Time{xValues[0], xValues[11]},
+			YValues: []float64{ownedValue, ownedValue},
+		}
+
+		graphSeries = append(graphSeries, ownedSeries)
+
+		// Annotate buy price
+		ownedAnnotation := chart.LastValueAnnotationSeries(ownedSeries)
+
+		graphSeries = append(graphSeries, ownedAnnotation)
+	}
+
+	// Create prediction series if any
+	if prediction != nil {
+		predMinSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor:     chart.ColorOrange,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
+			XValues: xValues[:],
+			YValues: []float64{},
+		}
+
+		predMaxSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor:     chart.ColorOrange,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
+			XValues: xValues[:],
+			YValues: []float64{},
+		}
+
+		for _, v := range prediction {
+			predMinSeries.YValues = append(predMinSeries.YValues, float64(v.Min))
+			predMaxSeries.YValues = append(predMaxSeries.YValues, float64(v.Max))
+		}
+
+		graphSeries = append(graphSeries, predMinSeries)
+		graphSeries = append(graphSeries, predMaxSeries)
+	}
+
+	// Create price series
 	xxValues := []time.Time{}
 	yyValues := []float64{}
 
@@ -41,14 +94,9 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 		}
 	}
 
-	// Graph series slice
-	graphSeries := []chart.Series{}
-
-	// Create price series
 	priceSeries := chart.TimeSeries{
 		Style: chart.Style{
 			StrokeColor: chart.ColorBlue,
-			FillColor:   chart.ColorTransparent,
 		},
 		XValues: xxValues,
 		YValues: yyValues,
@@ -76,6 +124,8 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 		)
 	}
 
+	graphSeries = append(graphSeries, priceAnnotations)
+
 	// Create ticks for x axis
 	ticks := make([]chart.Tick, len(xValues))
 
@@ -83,63 +133,6 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 	for i := 0; i < len(xValues); i++ {
 		ticks[i].Value = chart.TimeToFloat64(xValues[i])
 		ticks[i].Label = TimeToShortDayAMPM(xValues[i])
-	}
-
-	graphSeries = append(graphSeries, priceAnnotations)
-
-	// Create prediction series if any
-	if prediction != nil {
-		predMinSeries := chart.TimeSeries{
-			Style: chart.Style{
-				StrokeColor:     chart.ColorOrange,
-				StrokeDashArray: []float64{5.0, 5.0},
-				FillColor:       chart.ColorTransparent,
-			},
-			XValues: xValues[:],
-			YValues: []float64{},
-		}
-
-		predMaxSeries := chart.TimeSeries{
-			Style: chart.Style{
-				StrokeColor:     chart.ColorOrange,
-				StrokeDashArray: []float64{5.0, 5.0},
-				FillColor:       chart.ColorTransparent,
-			},
-			XValues: xValues[:],
-			YValues: []float64{},
-		}
-
-		for _, v := range prediction {
-			predMinSeries.YValues = append(predMinSeries.YValues, float64(v.Min))
-			predMaxSeries.YValues = append(predMaxSeries.YValues, float64(v.Max))
-		}
-
-		graphSeries = append(graphSeries, predMinSeries)
-		graphSeries = append(graphSeries, predMaxSeries)
-	}
-
-	// Create owned series if the lineValue is not 0
-	if lineValue != 0 {
-		// Dashed line marking buy price
-		ownedSeries := chart.TimeSeries{
-			Style: chart.Style{
-				StrokeColor:     chart.ColorRed,
-				StrokeDashArray: []float64{5.0, 5.0},
-			},
-			XValues: xValues[:],
-			YValues: make([]float64, len(xValues)),
-		}
-
-		for i := range ownedSeries.XValues {
-			ownedSeries.YValues[i] = lineValue
-		}
-
-		graphSeries = append(graphSeries, ownedSeries)
-
-		// Annotate buy price
-		ownedAnnotation := chart.LastValueAnnotationSeries(ownedSeries)
-
-		graphSeries = append(graphSeries, ownedAnnotation)
 	}
 
 	// Create the graph
@@ -174,23 +167,6 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, lin
 	}
 
 	return buffer, err
-}
-
-// ChartValueToTime casts a chart value to a time.Time if possible
-func ChartValueToTime(v interface{}, location *time.Location) time.Time {
-	if t, ok := v.(time.Time); ok {
-		return t.In(location)
-	}
-
-	if i, ok := v.(int64); ok {
-		return time.Unix(0, i).In(location)
-	}
-
-	if f, ok := v.(float64); ok {
-		return time.Unix(0, int64(f)).In(location)
-	}
-
-	return time.Time{}
 }
 
 // TimeToShortDayAMPM prints the name of the weekday plus AM or PM
