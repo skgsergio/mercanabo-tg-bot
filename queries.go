@@ -27,6 +27,9 @@ import (
 )
 
 var (
+	// ErrInvalidTZ is returned when the TZ is invalid
+	ErrInvalidTZ = errors.New("invalid tz")
+
 	// ErrDateParse is returned when an user input date failed to be parsed
 	ErrDateParse = errors.New("date parse failed")
 
@@ -146,6 +149,7 @@ func (d *Database) ChangeGroupDeleteSeconds(c *tb.Chat, seconds uint8) error {
 		return err
 	}
 
+	// Update DeleteSeconds value
 	group.DeleteSeconds = seconds
 
 	err = d.DB.Save(group).Error
@@ -154,6 +158,33 @@ func (d *Database) ChangeGroupDeleteSeconds(c *tb.Chat, seconds uint8) error {
 	}
 
 	return err
+}
+
+// ChangeGroupTZ changes the group delete seconds setting
+func (d *Database) ChangeGroupTZ(c *tb.Chat, tz string) (string, error) {
+	// Get group
+	group, err := d.GetGroup(c)
+	if err != nil {
+		return "", err
+	}
+
+	// Try to load the TZ
+	_, err = time.LoadLocation(tz)
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error loading timezone")
+		return "", ErrInvalidTZ
+	}
+
+	// Update TZ value
+	oldTZ := group.TZ
+	group.TZ = tz
+
+	err = d.DB.Save(group).Error
+	if err != nil {
+		log.Error().Str("module", "database").Err(err).Msg("error saving group tz")
+	}
+
+	return oldTZ, err
 }
 
 /*******************

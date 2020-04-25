@@ -98,6 +98,20 @@ func (t *Telegram) handleAdminCmd(m *tb.Message) {
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
+	// Check if the user is a group admin or a super admin
+	groupAdmin, err := t.isGroupAdmin(m.Chat, m.Sender)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
+		rm := t.reply(m, texts.Unprivileged)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
 	helpLines := []string{
 		texts.Admin.AvailableCmds,
 		fmt.Sprintf("\n<code>/%s %s</code>\n%s", texts.Delete.Cmd, texts.Delete.Params, texts.Delete.Desc),
@@ -108,7 +122,7 @@ func (t *Telegram) handleAdminCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
-// handleBuyCmd triggers when the buy cmd is sent to a group, if sent in private the user will be warned
+// handleBuyCmd triggers when the buy cmd is sent to a group
 func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -189,7 +203,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 }
 
-// handleIslandPriceCmd triggers when the islandprice cmd is sent to a group, if sent in private the user will be warned
+// handleIslandPriceCmd triggers when the islandprice cmd is sent to a group
 func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -237,7 +251,7 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 }
 
-// handleSellCmd triggers when the sell cmd is sent to a group, if sent in private the user will be warned
+// handleSellCmd triggers when the sell cmd is sent to a group
 func (t *Telegram) handleSellCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -316,7 +330,7 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 }
 
-// handleListCmd triggers when the list cmd is sent to a group, if sent in private the user will be warned
+// handleListCmd triggers when the list cmd is sent to a group
 func (t *Telegram) handleListCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -392,7 +406,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
-// handleChartCmd triggers when the chart cmd is sent to a group, if sent in private the user will be warned
+// handleChartCmd triggers when the chart cmd is sent to a group
 func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -534,7 +548,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
-// handleTurnipsCmd triggers when the turnips cmd is sent to a group, if sent in private the user will be warned
+// handleTurnipsCmd triggers when the turnips cmd is sent to a group
 func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -583,7 +597,7 @@ func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
 }
 
-// handleDeleteCmd triggers when the delete cmd is sent to a group, if sent in private the user will be warned
+// handleDeleteCmd triggers when the delete cmd is sent to a group
 func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
@@ -597,32 +611,29 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
-	// Check if it is a super admin
-	isSuperAdmin := false
-
-	for _, uid := range superAdmins {
-		if int64(m.Sender.ID) == uid {
-			isSuperAdmin = true
-			break
-		}
-	}
-
-	// Check if it is an admin
-	cm, err := t.bot.ChatMemberOf(m.Chat, t.bot.Me)
+	// Check if the user is a group admin or a super admin
+	groupAdmin, err := t.isGroupAdmin(m.Chat, m.Sender)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
-	if !isSuperAdmin && cm.Role != tb.Creator && cm.Role != tb.Administrator {
+	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
 		rm := t.reply(m, texts.Unprivileged)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
-	// Parse payload
-	seconds, err := parseUint8(m.Payload)
+	// Validate the parameters
+	parameters := strings.Fields(m.Payload)
+	if len(parameters) != 1 {
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	seconds, err := parseUint8(parameters[0])
 	if err != nil || seconds > 30 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
@@ -642,5 +653,59 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	} else {
 		rm = t.reply(m, texts.Delete.Disabled)
 	}
+	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+}
+
+// handleDChangeTZCmd triggers when the change TZ cmd is sent to a group
+func (t *Telegram) handleChangeTZCmd(m *tb.Message) {
+	if m.Private() {
+		t.send(m.Chat, texts.GroupOnly)
+		return
+	}
+
+	log.Info().
+		Str("module", "telegram").
+		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
+		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
+		Msg(m.Text)
+
+	// Check if the user is a group admin or a super admin
+	groupAdmin, err := t.isGroupAdmin(m.Chat, m.Sender)
+	if err != nil {
+		rm := t.reply(m, texts.InternalError)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
+		rm := t.reply(m, texts.Unprivileged)
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	// Validate the parameters
+	parameters := strings.Fields(m.Payload)
+	if len(parameters) != 1 {
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	oldTZ, err := db.ChangeGroupTZ(m.Chat, parameters[0])
+	if err != nil {
+		var rm *tb.Message
+
+		if err == ErrInvalidTZ {
+			rm = t.reply(m, fmt.Sprintf(texts.ChangeTZ.Invalid, parameters[0]))
+		} else {
+			rm = t.reply(m, texts.InternalError)
+		}
+
+		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+		return
+	}
+
+	rm := t.reply(m, fmt.Sprintf(texts.ChangeTZ.Changed, oldTZ, parameters[0], texts.ChangeTZ.Cmd, oldTZ))
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 }

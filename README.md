@@ -1,4 +1,5 @@
 # Mercanabo Telegram Bot
+
 A simple Telegram bot that allows users of a Telegram Group to track Turnip sell
 prices and store how much they bought in oder to maximize profits.
 
@@ -34,15 +35,16 @@ go build
 - `POSTGRES_DB`: PostgreSQL database name.
 
 ### Docker
+
 To simplify the deployment there is a [Docker Compose](docker-compose.yml) file
 ready to use. You can just use it and it will deploy a postgresql container, with
 a volume for persistence, and a bot container, that is build from local source.
 
 ### TODO
 
-- Do not show admin help to non admin users
-- Implement TZ change cmd
+- Nothing 🎉
 
 ## License
+
 This project is licensed under the GPL 3.0 License. See the [LICENSE](LICENSE)
 file for details.

@@ -76,8 +76,29 @@ func (t *Telegram) registerHandlers() {
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Chart.Cmd), t.handleChartCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Turnips.Cmd), t.handleTurnipsCmd)
 	t.bot.Handle(fmt.Sprintf("/%s", texts.Delete.Cmd), t.handleDeleteCmd)
+	t.bot.Handle(fmt.Sprintf("/%s", texts.ChangeTZ.Cmd), t.handleChangeTZCmd)
 
 	t.handlersRegistered = true
+}
+
+func (t *Telegram) isSuperAdmin(user *tb.User) bool {
+	for _, uid := range superAdmins {
+		if int64(user.ID) == uid {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (t *Telegram) isGroupAdmin(chat *tb.Chat, user *tb.User) (bool, error) {
+	cm, err := t.bot.ChatMemberOf(chat, user)
+	if err != nil {
+		log.Error().Str("module", "telegram").Err(err).Msg("error checking user privileges")
+		return false, err
+	}
+
+	return (cm.Role == tb.Creator || cm.Role == tb.Administrator), nil
 }
 
 // send sends a message with error logging and retries

@@ -131,9 +131,11 @@ type Texts struct {
 	} `json:"delete"`
 
 	ChangeTZ struct {
-		Cmd    string `json:"cmd"`
-		Params string `json:"params"`
-		Desc   string `json:"desc"`
+		Cmd     string `json:"cmd"`
+		Params  string `json:"params"`
+		Desc    string `json:"desc"`
+		Changed string `json:"changed"`
+		Invalid string `json:"invalid"`
 	} `json:"changetz"`
 }
 
