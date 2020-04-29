@@ -220,14 +220,14 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	// Validate the parameters
 	parameters := strings.Fields(m.Payload)
 	if len(parameters) != 1 {
-		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.IslandPrice.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}
 
 	islandPrice, err := parseUint32(parameters[0])
 	if err != nil {
-		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
+		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.IslandPrice.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
 	}

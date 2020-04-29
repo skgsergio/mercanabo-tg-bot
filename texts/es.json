@@ -1,8 +1,8 @@
 {
   "group_only": "Este bot solo puede ser usado en grupos.",
   "join_text": "Mercanabo ahora está disponible en este grupo.\nLa zona horaria es <code>%v</code>\n\nPara saber como funciona el bot usa /%v",
-  "internal_error": "¡Ups! Se ha producido un error interno del bot.",
-  "invalid_parameters": "Parametros inválidos para el comando:",
+  "internal_error": "¡Ups! Se ha producido un error interno.",
+  "invalid_parameters": "Parámetros inválidos para el comando:",
   "unprivileged": "No tienes permisos para hacer eso.",
   "bells": "bayas",
   "days": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
@@ -17,7 +17,7 @@
       "desc": "el segundo medio día de subida será mayor o igual 1.4x, el tercer medio día de subida es el máximo 2~6x."
     },
     "falling": {
-      "name": "Descendiente",
+      "name": "Descendente",
       "desc": "100% pérdidas."
     },
     "small_spike": {
@@ -31,9 +31,7 @@
   "help": {
     "cmd": "ayuda",
     "desc": "Muestra esta ayuda. Era obvio, ¿no?",
-    "available_cmds": "Comandos disponibles:",
-    "cmd_admin": "admin",
-    "admin_cmds": "Comandos para administradores:"
+    "available_cmds": "Comandos disponibles:"
   },
   "admin": {
     "cmd": "admin",
@@ -42,8 +40,8 @@
   },
   "buy": {
     "cmd": "compra",
-    "params": "[cantidad] [precio de compra] [precio en tu isla, opcional]",
-    "desc": "Indica el número de nabos y el precio al que has comprado. Si has comprado fuera de tu isla pon como tercer parametro el precio en tu isla.",
+    "params": "[cantidad] [precio de compra] [precio en tu isla (opcional)]",
+    "desc": "Guarda el número de nabos y el precio al que has comprado. Si has comprado fuera de tu isla pon como tercer parametro el precio en tu isla.",
     "saved": "Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "units_mod_ten": "La cantidad no es múltiplo de 10, revisa la cantidad que has comprado y vuelve a intentarlo."
@@ -51,14 +49,14 @@
   "island_price": {
     "cmd": "precioisla",
     "params": "[precio de compra en tu isla]",
-    "desc": "Indica el precio de compra en tu isla. Si has comprado en otra isla y usado el comando <code>/%s</code> sin indicar el precio de tu isla puedes cambiarlo con este comando.",
+    "desc": "Guarda el precio de compra en tu isla. Si has comprado en otra isla y usado el comando <code>/%s</code> sin indicar el precio de tu isla puedes cambiarlo con este comando.",
     "saved": "El precio de compra de tu isla es de <b>%v</b> bayas/unidad.",
     "changed": "¡Lo cambio! El precio de compra de tu isla es de <b>%v</b> bayas/unidad en vez de <b>%v</b> bayas/unidad."
   },
   "sell": {
     "cmd": "venta",
     "params": "[precio] [fecha opcional: YYYY-MM-DD AM/PM]",
-    "desc": "Indica el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
+    "desc": "Guarda el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
     "saved": "El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b>.",
     "changed": "¡Lo cambio! El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b> en vez de <b>%v</b> bayas.",
     "invalid_date": "La fecha que has introducido no cumple el formato <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>",
@@ -73,7 +71,7 @@
   },
   "chart": {
     "cmd": "grafica",
-    "desc": "Muestra tu gráfica de precios de esta semana.",
+    "desc": "Muestra tu gráfica de precios de esta semana con la predicción de patrones y precios.",
     "no_prices": "No tienes precios registrados esta semana."
   },
   "turnips": {
@@ -85,9 +83,9 @@
   "delete": {
     "cmd": "borrado",
     "params": "[segundos: 0-30]",
-    "desc": "Configura el numero de segundos tras los cuales los mensajes de confirmación se borraran, si el bot es administrador además borrara el mensaje del usuario. Si se especifica 0 segundos se desactiva",
-    "done": "¡Hecho! A partir de ahora se borraran los mensajes en <b>%v</b> segundos. Empezando por este.",
-    "disabled": "¡Hecho! Se ha deshabilitado el borrado de mensajes."
+    "desc": "Configura el numero de segundos tras los cuales los mensajes de confirmación del bot se borraran. Además, si el bot es administrador (o tiene permisos de borrado de mensajes), borrara el mensaje del usuario. Si se especifica 0 segundos se desactivará el borrado.",
+    "done": "A partir de ahora se borraran los mensajes en <b>%v</b> segundos. Empezando por este.",
+    "disabled": "Se ha deshabilitado el borrado de mensajes."
 
   },
   "changetz": {
