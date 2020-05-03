@@ -58,7 +58,9 @@ func (d *Database) GetGroup(c *tb.Chat) (*Group, error) {
 		return nil, err
 	}
 
-	if d.DB.NewRecord(group) {
+	isNew := d.DB.NewRecord(group)
+
+	if isNew {
 		group.ID = c.ID
 		group.Title = c.Title
 		group.TZ = defaultTZ
@@ -71,7 +73,7 @@ func (d *Database) GetGroup(c *tb.Chat) (*Group, error) {
 	}
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new_record", d.DB.NewRecord(group)).Msg("error saving group")
+		log.Error().Str("module", "database").Err(err).Bool("new_record", isNew).Msg("error saving group")
 	}
 
 	return group, err
@@ -88,7 +90,9 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 		return nil, err
 	}
 
-	if d.DB.NewRecord(user) {
+	isNew := d.DB.NewRecord(user)
+
+	if isNew {
 		user.ID = int64(u.ID)
 		user.FirstName = u.FirstName
 		user.LastName = u.LastName
@@ -118,7 +122,7 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 	}
 
 	if err != nil {
-		log.Error().Str("module", "database").Err(err).Bool("new_record", d.DB.NewRecord(user)).Msg("error saving user")
+		log.Error().Str("module", "database").Err(err).Bool("new_record", isNew).Msg("error saving user")
 	}
 
 	return user, err
@@ -139,6 +143,18 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 	}
 
 	return user, group, nil
+}
+
+// ChangeGroupID changes the group ID to a new one
+func (d *Database) ChangeGroupID(old, new int64) error {
+	err := d.DB.Model(&Group{}).Where("id", old).Update("id", new).Error
+
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		log.Error().Str("module", "database").Err(err).Int64("old_group_id", old).Int64("new_group_id", new).Msg("error changing group id")
+		return err
+	}
+
+	return nil
 }
 
 // ChangeGroupDeleteSeconds changes the group delete seconds setting

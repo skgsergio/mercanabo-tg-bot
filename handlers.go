@@ -54,6 +54,17 @@ func (t *Telegram) handleAddedToGroup(m *tb.Message) {
 	t.send(m.Chat, fmt.Sprintf(texts.JoinText, group.TZ, texts.Help.Cmd))
 }
 
+// handleGroupMigration triggers when a group is migrated and its ID changes (converted to super-group)
+func (t *Telegram) handleGroupMigration(from, to int64) {
+	log.Info().Str("module", "telegram").Int64("from_chat_id", from).Int64("to_chat_id", to).Msg("group migrated")
+
+	err := db.ChangeGroupID(from, to)
+	if err != nil {
+		log.Error().Str("module", "telegram").Err(err).Msg("error updating migrated group")
+		return
+	}
+}
+
 // handleHelpCmd triggers when the help cmd is sent to a group
 func (t *Telegram) handleHelpCmd(m *tb.Message) {
 	if m.Private() {
