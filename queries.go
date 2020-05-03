@@ -147,7 +147,7 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 
 // ChangeGroupID changes the group ID to a new one
 func (d *Database) ChangeGroupID(old, new int64) error {
-	err := d.DB.Model(&Group{ID: old}).Updates(&Group{ID: new}).Error
+	err := d.DB.Model(&Group{ID: old}).Update("id", new).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Int64("old_group_id", old).Int64("new_group_id", new).Msg("error changing group id")
