@@ -147,7 +147,11 @@ func (d *Database) GetUserAndGroup(u *tb.User, c *tb.Chat) (*User, *Group, error
 
 // ChangeGroupID changes the group ID to a new one
 func (d *Database) ChangeGroupID(old, new int64) error {
-	err := d.DB.Model(&Group{ID: old}).Update("id", new).Error
+	// Ok, here is the deal: you walk away and act as if you didn't see this, and I explain to you this hack.
+	//
+	// Turns that GORM doesn't allow you to update a primary key so the workaround is using the Table method
+	// to run DB operations skipping any kind of checks that are performed when using the Models.
+	err := d.DB.Table(d.DB.NewScope(&Group{}).TableName()).Where("id = ?", old).Update("id", new).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Int64("old_group_id", old).Int64("new_group_id", new).Msg("error changing group id")
