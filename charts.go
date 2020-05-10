@@ -26,24 +26,24 @@ import (
 )
 
 // PricesChart returns a chart given a slice of prices
-func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, ownedValue float64, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
+func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBells uint32, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
 	if addRangeTitle {
-		title += fmt.Sprintf(" | %s - %s", xValues[0].Format("2006-01-02"), xValues[len(xValues)-1].Format("2006-01-02"))
+		title += fmt.Sprintf(" | %s - %s", times[0].Format("2006-01-02"), times[len(times)-1].Format("2006-01-02"))
 	}
 
 	// Graph series slice
 	graphSeries := []chart.Series{}
 
 	// Create owned series if the ownedValue is not 0
-	if ownedValue != 0 {
+	if ownedBells != 0 {
 		// Dashed line marking buy price
 		ownedSeries := chart.TimeSeries{
 			Style: chart.Style{
 				StrokeColor:     chart.ColorRed,
 				StrokeDashArray: []float64{5.0, 5.0},
 			},
-			XValues: []time.Time{xValues[0], xValues[11]},
-			YValues: []float64{ownedValue, ownedValue},
+			XValues: []time.Time{times[0], times[11]},
+			YValues: []float64{float64(ownedBells), float64(ownedBells)},
 		}
 
 		graphSeries = append(graphSeries, ownedSeries)
@@ -61,7 +61,7 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, own
 				StrokeColor:     chart.ColorOrange,
 				StrokeDashArray: []float64{5.0, 5.0},
 			},
-			XValues: xValues[:],
+			XValues: times[:],
 			YValues: []float64{},
 		}
 
@@ -70,7 +70,7 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, own
 				StrokeColor:     chart.ColorOrange,
 				StrokeDashArray: []float64{5.0, 5.0},
 			},
-			XValues: xValues[:],
+			XValues: times[:],
 			YValues: []float64{},
 		}
 
@@ -84,13 +84,13 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, own
 	}
 
 	// Create price series
-	xxValues := []time.Time{}
-	yyValues := []float64{}
+	xValues := []time.Time{}
+	yValues := []float64{}
 
-	for i := range yValues {
-		if yValues[i] != 0 {
-			xxValues = append(xxValues, xValues[i])
-			yyValues = append(yyValues, yValues[i])
+	for i := range prices {
+		if prices[i] != 0 {
+			xValues = append(xValues, times[i])
+			yValues = append(yValues, float64(prices[i]))
 		}
 	}
 
@@ -98,8 +98,8 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, own
 		Style: chart.Style{
 			StrokeColor: chart.ColorBlue,
 		},
-		XValues: xxValues,
-		YValues: yyValues,
+		XValues: xValues,
+		YValues: yValues,
 	}
 
 	graphSeries = append(graphSeries, priceSeries)
@@ -127,12 +127,12 @@ func PricesChart(title string, xValues *[12]time.Time, yValues *[12]float64, own
 	graphSeries = append(graphSeries, priceAnnotations)
 
 	// Create ticks for x axis
-	ticks := make([]chart.Tick, len(xValues))
+	ticks := make([]chart.Tick, len(times))
 
 	// Fill annotations and ticks
-	for i := 0; i < len(xValues); i++ {
-		ticks[i].Value = chart.TimeToFloat64(xValues[i])
-		ticks[i].Label = TimeToShortDayAMPM(xValues[i])
+	for i := 0; i < len(times); i++ {
+		ticks[i].Value = chart.TimeToFloat64(times[i])
+		ticks[i].Label = TimeToShortDayAMPM(times[i])
 	}
 
 	// Create the graph

@@ -52,6 +52,7 @@ func parseInt64(s string) (int64, error) {
 	return int64(i), nil
 }
 
+// maxUint32 returns the maximum value from two uint32 values
 func maxUint32(x, y uint32) uint32 {
 	if x < y {
 		return y
@@ -60,6 +61,7 @@ func maxUint32(x, y uint32) uint32 {
 	return x
 }
 
+// minUint32 returns the minimum value from two uint32 values
 func minUint32(x, y uint32) uint32 {
 	if x > y {
 		return y

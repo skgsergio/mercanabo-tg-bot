@@ -447,7 +447,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Get prices
-	prices, err := db.GetUserWeekPrices(m.Sender, m.Chat)
+	prices, err := db.GetUserWeekPrices(m.Sender, m.Chat, time.Now())
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
@@ -477,20 +477,18 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Craft data to have a good looking graph when data is missing
-	xValues := [12]time.Time{}
-	yValues := [12]float64{}
+	times := [12]time.Time{}
 	buyPrices := [12]uint32{}
 
 	initDate := groupNow.With(time.Now().In(groupNow.TimeLocation)).BeginningOfWeek().Add(time.Hour * 24)
 
 	for i := 0; i < 12; i++ {
-		xValues[i] = initDate.Add(time.Hour * 12 * time.Duration(i))
+		times[i] = initDate.Add(time.Hour * 12 * time.Duration(i))
 	}
 
 	for _, price := range prices {
-		for i := range xValues {
-			if price.Date.Equal(xValues[i]) {
-				yValues[i] = float64(price.Bells)
+		for i := range times {
+			if price.Date.Equal(times[i]) {
 				buyPrices[i] = price.Bells
 				break
 			}
@@ -513,7 +511,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Generate chart
-	chart, err := PricesChart(user.String(), &xValues, &yValues, float64(owned.Bells), maxMin, groupNow.TimeLocation, true)
+	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, maxMin, groupNow.TimeLocation, true)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})

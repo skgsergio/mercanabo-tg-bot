@@ -530,8 +530,8 @@ func (d *Database) GetGroupCurrentPrices(c *tb.Chat) ([]*Price, string, error) {
 	return prices, reqDate.Format(timeFormatAMPM), err
 }
 
-// GetUserWeekPrices gets current sell price at Nook's Cranny
-func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat) ([]*Price, error) {
+// GetUserWeekPrices gets user prices recorded in the week the time belongs to
+func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat, t time.Time) ([]*Price, error) {
 	// Get user and group
 	user, group, err := d.GetUserAndGroup(u, c)
 	if err != nil {
@@ -545,7 +545,7 @@ func (d *Database) GetUserWeekPrices(u *tb.User, c *tb.Chat) ([]*Price, error) {
 	}
 
 	// Get week start and end dates
-	bowDate := nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
+	bowDate := nowCfg.With(t.In(nowCfg.TimeLocation)).BeginningOfWeek()
 	eowDate := nowCfg.With(bowDate).EndOfWeek()
 
 	// Query current group prices
