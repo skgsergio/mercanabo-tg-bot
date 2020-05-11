@@ -40,7 +40,7 @@
   },
   "buy": {
     "cmd": "compra",
-    "params": "[cantidad] [precio de compra] [precio en tu isla (opcional)]",
+    "params": "[cantidad] [precio de compra: 90-110] [precio en tu isla (opcional): 90-110]",
     "desc": "Guarda el número de nabos y el precio al que has comprado. Si has comprado fuera de tu isla pon como tercer parametro el precio en tu isla.",
     "saved": "Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
     "changed": "¡Lo cambio! Has comprado <b>%v</b> nabos a <b>%v</b> bayas/unidad en vez de <b>%v</b> nabos a <b>%v</b> bayas/unidad.",
@@ -48,14 +48,14 @@
   },
   "island_price": {
     "cmd": "precioisla",
-    "params": "[precio de compra en tu isla]",
+    "params": "[precio de compra en tu isla: 90-110]",
     "desc": "Guarda el precio de compra en tu isla. Si has comprado en otra isla y usado el comando <code>/%s</code> sin indicar el precio de tu isla puedes cambiarlo con este comando.",
     "saved": "El precio de compra de tu isla es de <b>%v</b> bayas/unidad.",
     "changed": "¡Lo cambio! El precio de compra de tu isla es de <b>%v</b> bayas/unidad en vez de <b>%v</b> bayas/unidad."
   },
   "sell": {
     "cmd": "venta",
-    "params": "[precio] [fecha opcional: YYYY-MM-DD AM/PM]",
+    "params": "[precio: 0-660] [fecha opcional: YYYY-MM-DD AM/PM]",
     "desc": "Guarda el precio de compra en Mini Nook, si no se especifica una fecha será la actual. Para añadir o cambiar el precio de un dia anterior especifica una fecha.",
     "saved": "El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b>.",
     "changed": "¡Lo cambio! El precio de venta en tu isla es de <b>%v</b> bayas con fecha <b>%v</b> en vez de <b>%v</b> bayas.",

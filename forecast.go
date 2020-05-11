@@ -25,6 +25,13 @@ const (
 	SmallSpike
 )
 
+var (
+	// ErrSellPrice is returned when a new forecast is initializated and the sell price is less than 90 or greater than 110
+	ErrSellPrice = errors.New("sell price can't be lower than 90 or greater than 110")
+	// ErrBuyPrice is returned when a new forecast is initializated and the buy price greater than 660
+	ErrBuyPrice = errors.New("buy price can't be greater than 660")
+)
+
 // DayPrice represents the max and min prices in a day
 type DayPrice struct {
 	Min uint32
@@ -45,8 +52,14 @@ type Forecast struct {
 
 // NewForecast returns a Forecasts
 func NewForecast(sellPrice uint32, buyPrices [12]uint32) (*Forecast, error) {
-	if sellPrice == 0 {
-		return nil, errors.New("sell price can't be 0")
+	if sellPrice < 90 || sellPrice > 110 {
+		return nil, ErrSellPrice
+	}
+
+	for _, price := range buyPrices {
+		if price > 660 {
+			return nil, ErrBuyPrice
+		}
 	}
 
 	return &Forecast{

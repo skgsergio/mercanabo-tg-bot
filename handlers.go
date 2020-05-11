@@ -157,7 +157,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 
 	units, err := parseUint32(parameters[0])
 	bells, err2 := parseUint32(parameters[1])
-	if err != nil || err2 != nil {
+	if err != nil || err2 != nil || bells < 90 || bells > 110 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
@@ -172,7 +172,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	islandPrice := bells
 	if len(parameters) == 3 {
 		islandPrice, err = parseUint32(parameters[2])
-		if err != nil {
+		if err != nil || islandPrice < 90 || islandPrice > 110 {
 			rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
@@ -237,7 +237,7 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	}
 
 	islandPrice, err := parseUint32(parameters[0])
-	if err != nil {
+	if err != nil || islandPrice < 90 || islandPrice > 110 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.IslandPrice.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
@@ -285,7 +285,7 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	}
 
 	bells, err := parseUint32(parameters[0])
-	if err != nil {
+	if err != nil || bells > 660 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Sell.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 		return
