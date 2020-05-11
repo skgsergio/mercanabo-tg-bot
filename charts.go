@@ -126,6 +126,23 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 
 	graphSeries = append(graphSeries, priceAnnotations)
 
+	// Ok, here is the deal: you walk away and act as if you didn't see this, and I explain to you this hack.
+	//
+	// When there is only one data point in the graph the library enters in an infinite loop state that seems
+	// related to the Y axis range generation. In order to avoid this we just create a phantom series (transparent)
+	// with a couple of data points with values +5 and -5 of the unique datapoint. Will report the bug.
+	if prediction == nil && len(priceSeries.XValues) == 1 {
+		phantomSeries := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor: chart.ColorTransparent,
+			},
+			XValues: []time.Time{times[0], times[1]},
+			YValues: []float64{priceSeries.YValues[0] + 5, priceSeries.YValues[0] - 5},
+		}
+
+		graphSeries = append(graphSeries, phantomSeries)
+	}
+
 	// Create ticks for x axis
 	ticks := make([]chart.Tick, len(times))
 
