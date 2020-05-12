@@ -503,15 +503,15 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 
 		pwTime := time.Now().AddDate(0, 0, -7)
 
-		pwPrices, err := db.GetUserWeekPrices(m.Sender, m.Chat, pwTime)
-		if err != nil {
+		pwPrices, errp := db.GetUserWeekPrices(m.Sender, m.Chat, pwTime)
+		if errp != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
 		}
 
-		pwIslandPrice, err := db.GetUserIslandPriceByDate(m.Sender, m.Chat, pwTime)
-		if err != nil {
+		pwIslandPrice, errp := db.GetUserIslandPriceByDate(m.Sender, m.Chat, pwTime)
+		if errp != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
@@ -555,7 +555,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Generate chart
-	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, &forecast.MaxMin, groupNow.TimeLocation, true)
+	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, forecast, groupNow.TimeLocation, true)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})

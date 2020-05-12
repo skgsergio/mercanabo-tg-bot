@@ -569,6 +569,10 @@ func (f *Forecast) runForecast(previousWeek *Forecast) {
 	f.genFallingPatterns()
 	f.genSmallSpikePatterns()
 
+	if len(f.Patterns) == 0 {
+		return
+	}
+
 	// Calc max and min values for each day and keep track possible pattern types
 	patterns := map[PatternType]bool{}
 

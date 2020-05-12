@@ -26,7 +26,7 @@ import (
 )
 
 // PricesChart returns a chart given a slice of prices
-func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBells uint32, prediction *[12]DayPrice, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
+func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBells uint32, forecast *Forecast, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
 	if addRangeTitle {
 		title += fmt.Sprintf(" | %s - %s", times[0].Format("2006-01-02"), times[len(times)-1].Format("2006-01-02"))
 	}
@@ -55,7 +55,7 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 	}
 
 	// Create prediction series if any
-	if prediction != nil {
+	if len(forecast.Patterns) > 0 {
 		predMinSeries := chart.TimeSeries{
 			Style: chart.Style{
 				StrokeColor:     chart.ColorOrange,
@@ -74,7 +74,7 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 			YValues: []float64{},
 		}
 
-		for _, v := range prediction {
+		for _, v := range forecast.MaxMin {
 			predMinSeries.YValues = append(predMinSeries.YValues, float64(v.Min))
 			predMaxSeries.YValues = append(predMaxSeries.YValues, float64(v.Max))
 		}
@@ -131,7 +131,7 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 	// When there is only one data point in the graph the library enters in an infinite loop state that seems
 	// related to the Y axis range generation. In order to avoid this we just create a phantom series (transparent)
 	// with a couple of data points with values +5 and -5 of the unique datapoint. Will report the bug.
-	if prediction == nil && len(priceSeries.XValues) == 1 {
+	if len(forecast.Patterns) == 0 && len(priceSeries.XValues) == 1 {
 		phantomSeries := chart.TimeSeries{
 			Style: chart.Style{
 				StrokeColor: chart.ColorTransparent,
