@@ -481,14 +481,19 @@ func (f *Forecast) genSmallSpikePattern(spikeStart uint8) (*Pattern, error) {
 		minPred := f.minRatePrice(minRates[i-spikeStart])
 		maxPred := f.maxRatePrice(maxRates[i-spikeStart])
 
-		// 3rd and 5th days are locked to maxRate - 1
-		if i-spikeStart == 2 || i-spikeStart == 4 {
+		// 3rd half day maxPred is caped to maxRate -1
+		if i-spikeStart == 2 {
 			maxPred--
 		}
 
-		// 4th day is the peak where the minimum is the previous day minimum
+		// 4th half day is the peak, minPred must match 3rd half day min price
 		if i-spikeStart == 3 {
 			minPred = pattern.Prices[i-1].Min
+		}
+
+		// 5th half day maxPred is caped to 4th day max price - 1
+		if i-spikeStart == 4 {
+			maxPred = pattern.Prices[i-1].Max - 1
 		}
 
 		if f.buyPrices[i] != 0 {
