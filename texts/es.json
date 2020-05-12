@@ -22,7 +22,7 @@
     },
     "small_spike": {
       "name": "Pequeño pico",
-      "desc": "el segundo medio día de subida será menor o igual 1.4x (puede ser menor al primer medio dia de subida y verse un doble pico), el tercer medio día de subida es el máximo 1.4~2x."
+      "desc": "el segundo medio día de subida será menor o igual 1.4x (puede ser menor al primer medio dia de subida y verse un doble pico), el cuarto medio día de subida es el máximo 1.4~2x."
     },
     "matching": "Posibles patrones:",
     "unknown": "No se ha podido determinar el patrón.",

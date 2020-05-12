@@ -471,6 +471,16 @@ func (f *Forecast) GenSmallSpikePattern(spikeStart uint8) (*Pattern, error) {
 		minPred := f.minRatePrice(minRates[i-spikeStart])
 		maxPred := f.maxRatePrice(maxRates[i-spikeStart])
 
+		// 3rd and 5th days are locked to maxRate - 1
+		if i-spikeStart == 2 || i-spikeStart == 4 {
+			maxPred--
+		}
+
+		// 4th day is the peak where the minimum is the previous day minimum
+		if i-spikeStart == 3 {
+			minPred = pattern.Prices[i-1].Min
+		}
+
 		if f.buyPrices[i] != 0 {
 			if f.buyPrices[i] < minPred || f.buyPrices[i] > maxPred {
 				return nil, ErrNoMatch
