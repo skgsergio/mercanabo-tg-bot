@@ -2,8 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"math"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -48,6 +49,9 @@ type Pattern struct {
 type Forecast struct {
 	sellPrice uint32
 	buyPrices [12]uint32
+
+	Patterns []Pattern
+	MaxMin   [12]DayPrice
 }
 
 // NewForecast returns a Forecasts
@@ -62,34 +66,42 @@ func NewForecast(sellPrice uint32, buyPrices [12]uint32) (*Forecast, error) {
 		}
 	}
 
-	return &Forecast{
+	f := Forecast{
 		sellPrice: sellPrice,
 		buyPrices: buyPrices,
-	}, nil
+	}
+
+	f.runForecast()
+
+	return &f, nil
 }
 
 // Common operations
 
+// minRate returns the minimum rate vs the sell price for a half day
 func (f *Forecast) minRate(i uint8) float64 {
 	return (float64(f.buyPrices[i]) - 0.5) / float64(f.sellPrice)
 }
 
+// maxRate returns the maximum rate vs the sell price for a half day
 func (f *Forecast) maxRate(i uint8) float64 {
 	return (float64(f.buyPrices[i]) + 0.5) / float64(f.sellPrice)
 }
 
+// minRatePrice applies a rate to the sell price and returns the result rounded to the lower value
 func (f *Forecast) minRatePrice(r float64) uint32 {
 	return uint32(math.Floor(r * float64(f.sellPrice)))
 }
 
+// maxRatePrice applies a rate to the sell price and returns the result rounded to the upper value
 func (f *Forecast) maxRatePrice(r float64) uint32 {
 	return uint32(math.Ceil(r * float64(f.sellPrice)))
 }
 
 // Random pattern functions
 
-// GenRandomPattern returns a random pattern following the given halfs for each phase
-func (f *Forecast) GenRandomPattern(inc1Halfs, dec1Halfs, inc2Halfs, dec2Halfs, inc3Halfs uint8) (*Pattern, error) {
+// genRandomPattern returns a random pattern following the given halfs for each phase
+func (f *Forecast) genRandomPattern(inc1Halfs, dec1Halfs, inc2Halfs, dec2Halfs, inc3Halfs uint8) (*Pattern, error) {
 	pattern := Pattern{
 		Type: Random,
 	}
@@ -245,29 +257,25 @@ func (f *Forecast) GenRandomPattern(inc1Halfs, dec1Halfs, inc2Halfs, dec2Halfs, 
 	return &pattern, nil
 }
 
-// GenRandomPatterns generates all possible random patterns with the current data
-func (f *Forecast) GenRandomPatterns() []*Pattern {
-	patterns := []*Pattern{}
-
+// genRandomPatterns generates all possible random patterns with the current data
+func (f *Forecast) genRandomPatterns() {
 	for dec1 := uint8(2); dec1 < 4; dec1++ {
 		for inc1 := uint8(0); inc1 < 7; inc1++ {
 			for inc3 := uint8(0); inc3 < (7 - inc1); inc3++ {
-				pattern, err := f.GenRandomPattern(inc1, dec1, 7-inc1-inc3, 5-dec1, inc3)
+				pattern, err := f.genRandomPattern(inc1, dec1, 7-inc1-inc3, 5-dec1, inc3)
 
 				if err == nil {
-					patterns = append(patterns, pattern)
+					f.Patterns = append(f.Patterns, *pattern)
 				} else if err != ErrNoMatch {
-					fmt.Printf("Error: %v\n", err)
+					log.Error().Str("module", "forecast").Err(err).Msg("error generating random pattern")
 				}
 			}
 		}
 	}
-
-	return patterns
 }
 
-// GenBigSpikePattern returns a big peak pattern given a spike start
-func (f *Forecast) GenBigSpikePattern(spikeStart uint8) (*Pattern, error) {
+// genBigSpikePattern returns a big peak pattern given a spike start
+func (f *Forecast) genBigSpikePattern(spikeStart uint8) (*Pattern, error) {
 	pattern := Pattern{
 		Type: BigSpike,
 	}
@@ -354,25 +362,21 @@ func (f *Forecast) GenBigSpikePattern(spikeStart uint8) (*Pattern, error) {
 	return &pattern, nil
 }
 
-// GenBigSpikePatterns generates all possible big spike patterns with the current data
-func (f *Forecast) GenBigSpikePatterns() []*Pattern {
-	patterns := []*Pattern{}
-
+// genBigSpikePatterns generates all possible big spike patterns with the current data
+func (f *Forecast) genBigSpikePatterns() {
 	for spikeStart := uint8(1); spikeStart < 8; spikeStart++ {
-		pattern, err := f.GenBigSpikePattern(spikeStart)
+		pattern, err := f.genBigSpikePattern(spikeStart)
 
 		if err == nil {
-			patterns = append(patterns, pattern)
+			f.Patterns = append(f.Patterns, *pattern)
 		} else if err != ErrNoMatch {
-			fmt.Printf("Error: %v\n", err)
+			log.Error().Str("module", "forecast").Err(err).Msg("error generating big spike pattern")
 		}
 	}
-
-	return patterns
 }
 
-// GenFallingPattern returns falling pattern
-func (f *Forecast) GenFallingPattern() (*Pattern, error) {
+// genFallingPattern returns falling pattern
+func (f *Forecast) genFallingPattern() (*Pattern, error) {
 	pattern := Pattern{
 		Type: Falling,
 	}
@@ -408,23 +412,19 @@ func (f *Forecast) GenFallingPattern() (*Pattern, error) {
 	return &pattern, nil
 }
 
-// GenFallingPatterns generates all possible big spike patterns with the current data
-func (f *Forecast) GenFallingPatterns() []*Pattern {
-	patterns := []*Pattern{}
-
-	pattern, err := f.GenFallingPattern()
+// genFallingPatterns generates all possible big spike patterns with the current data
+func (f *Forecast) genFallingPatterns() {
+	pattern, err := f.genFallingPattern()
 
 	if err == nil {
-		patterns = append(patterns, pattern)
+		f.Patterns = append(f.Patterns, *pattern)
 	} else if err != ErrNoMatch {
-		fmt.Printf("Error: %v\n", err)
+		log.Error().Str("module", "forecast").Err(err).Msg("error generating falling pattern")
 	}
-
-	return patterns
 }
 
-// GenSmallSpikePattern returns a small peak pattern given a spike start
-func (f *Forecast) GenSmallSpikePattern(spikeStart uint8) (*Pattern, error) {
+// genSmallSpikePattern returns a small peak pattern given a spike start
+func (f *Forecast) genSmallSpikePattern(spikeStart uint8) (*Pattern, error) {
 	pattern := Pattern{
 		Type: SmallSpike,
 	}
@@ -528,47 +528,40 @@ func (f *Forecast) GenSmallSpikePattern(spikeStart uint8) (*Pattern, error) {
 	return &pattern, nil
 }
 
-// GenSmallSpikePatterns generates all possible small spike patterns with the current data
-func (f *Forecast) GenSmallSpikePatterns() []*Pattern {
-	patterns := []*Pattern{}
-
+// genSmallSpikePatterns generates all possible small spike patterns with the current data
+func (f *Forecast) genSmallSpikePatterns() {
 	for spikeStart := uint8(0); spikeStart < 8; spikeStart++ {
-		pattern, err := f.GenSmallSpikePattern(spikeStart)
+		pattern, err := f.genSmallSpikePattern(spikeStart)
 
 		if err == nil {
-			patterns = append(patterns, pattern)
+			f.Patterns = append(f.Patterns, *pattern)
 		} else if err != ErrNoMatch {
-			fmt.Printf("Error: %v\n", err)
+			log.Error().Str("module", "forecast").Err(err).Msg("error generating small spike pattern")
 		}
 	}
-
-	return patterns
 }
 
-// GenAllPatterns generates all pattterns
-func (f *Forecast) GenAllPatterns() (*[]*Pattern, *[12]DayPrice) {
-	patterns := []*Pattern{}
-	maxMin := [12]DayPrice{}
+// runForecast generates all patterns that could match and gets the max and min possible price per day
+func (f *Forecast) runForecast() {
+	// Make sure everything is empty
+	f.Patterns = []Pattern{}
+	f.MaxMin = [12]DayPrice{}
 
-	patterns = append(patterns, f.GenRandomPatterns()...)
-	patterns = append(patterns, f.GenBigSpikePatterns()...)
-	patterns = append(patterns, f.GenFallingPatterns()...)
-	patterns = append(patterns, f.GenSmallSpikePatterns()...)
+	// Generate all patterns
+	f.genRandomPatterns()
+	f.genBigSpikePatterns()
+	f.genFallingPatterns()
+	f.genSmallSpikePatterns()
 
-	if len(patterns) == 0 {
-		return &patterns, nil
+	// Calc max and min values for each day
+	for i := range f.MaxMin {
+		f.MaxMin[i].Min = math.MaxUint32
 	}
 
-	for i := range maxMin {
-		maxMin[i].Min = math.MaxUint32
-	}
-
-	for _, pat := range patterns {
-		for i, p := range pat.Prices {
-			maxMin[i].Max = maxUint32(maxMin[i].Max, p.Max)
-			maxMin[i].Min = minUint32(maxMin[i].Min, p.Min)
+	for i := range f.Patterns {
+		for j := range f.Patterns[i].Prices {
+			f.MaxMin[j].Max = maxUint32(f.MaxMin[j].Max, f.Patterns[i].Prices[j].Max)
+			f.MaxMin[j].Min = minUint32(f.MaxMin[j].Min, f.Patterns[i].Prices[j].Min)
 		}
 	}
-
-	return &patterns, &maxMin
 }

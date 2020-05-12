@@ -496,22 +496,18 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Gen all matching patterns
-	var patterns *[]*Pattern = nil
-	var maxMin *[12]DayPrice = nil
-
+	var forecast *Forecast = nil
 	if islandPrice != nil && islandPrice.Bells > 0 {
-		f, errf := NewForecast(islandPrice.Bells, buyPrices)
-		if errf != nil {
+		forecast, err = NewForecast(islandPrice.Bells, buyPrices)
+		if err != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
 			return
 		}
-
-		patterns, maxMin = f.GenAllPatterns()
 	}
 
 	// Generate chart
-	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, maxMin, groupNow.TimeLocation, true)
+	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, &forecast.MaxMin, groupNow.TimeLocation, true)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
@@ -521,9 +517,9 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	// Add pattern info as image caption
 	var caption string
 
-	if patterns == nil {
+	if islandPrice == nil || islandPrice.Bells == 0 {
 		caption += texts.Patterns.NoIslandPrice
-	} else if len(*patterns) == 0 {
+	} else if len(forecast.Patterns) == 0 {
 		caption += texts.Patterns.Unknown
 	} else {
 		pats := map[PatternType]bool{
@@ -533,7 +529,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 			SmallSpike: false,
 		}
 
-		for _, p := range *patterns {
+		for _, p := range forecast.Patterns {
 			pats[p.Type] = true
 		}
 
