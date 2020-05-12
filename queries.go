@@ -214,14 +214,14 @@ func (d *Database) ChangeGroupTZ(c *tb.Chat, tz string) (string, error) {
 /* Private methods */
 
 // getIslandPrice returns islandPrice turnips by the user this week
-func (d *Database) getUserIslandPrice(u *User, g *Group) (*IslandPrice, error) {
+func (d *Database) getUserIslandPrice(u *User, g *Group, t time.Time) (*IslandPrice, error) {
 	// Get now config with group timezone
 	nowCfg, err := g.NowConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	bowDate := nowCfg.With(time.Now().In(nowCfg.TimeLocation)).BeginningOfWeek()
+	bowDate := nowCfg.With(t.In(nowCfg.TimeLocation)).BeginningOfWeek()
 
 	// Get this week islandPrice
 	islandPrice := &IslandPrice{}
@@ -249,7 +249,7 @@ func (d *Database) saveUserIslandPrice(u *User, g *Group, bells uint32) (bool, u
 	}
 
 	// Get previous island price if exists
-	islandPrice, err := d.getUserIslandPrice(u, g)
+	islandPrice, err := d.getUserIslandPrice(u, g, time.Now())
 	if err != nil {
 		return false, 0, err
 	}
@@ -277,7 +277,7 @@ func (d *Database) saveUserIslandPrice(u *User, g *Group, bells uint32) (bool, u
 
 /* Public methods */
 
-// GetUserIslandPrice sets the buy price in an user island
+// GetUserIslandPrice gets the buy price in an user island
 func (d *Database) GetUserIslandPrice(u *tb.User, c *tb.Chat) (*IslandPrice, error) {
 	// Get user and group
 	user, group, err := d.GetUserAndGroup(u, c)
@@ -285,7 +285,18 @@ func (d *Database) GetUserIslandPrice(u *tb.User, c *tb.Chat) (*IslandPrice, err
 		return nil, err
 	}
 
-	return d.getUserIslandPrice(user, group)
+	return d.getUserIslandPrice(user, group, time.Now())
+}
+
+// GetUserIslandPriceByDate gets the buy price in an user island
+func (d *Database) GetUserIslandPriceByDate(u *tb.User, c *tb.Chat, t time.Time) (*IslandPrice, error) {
+	// Get user and group
+	user, group, err := d.GetUserAndGroup(u, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.getUserIslandPrice(user, group, t)
 }
 
 // SaveUserIslandPrice sets the buy price in an user island

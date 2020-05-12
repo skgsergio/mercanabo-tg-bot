@@ -31,6 +31,15 @@ var (
 	ErrSellPrice = errors.New("sell price can't be lower than 90 or greater than 110")
 	// ErrBuyPrice is returned when a new forecast is initializated and the buy price greater than 660
 	ErrBuyPrice = errors.New("buy price can't be greater than 660")
+
+	// ProbabilityTable is the table of pattern probabilities given the previous week probability
+	ProbabilityTable = [][]float64{
+		// {Random, BigSpike, Falling, SmallSpike}
+		{20, 30, 15, 35}, // Random
+		{50, 5, 20, 25},  // BigSpike
+		{25, 45, 5, 25},  // Falling
+		{45, 25, 15, 15}, // SmallSpike
+	}
 )
 
 // DayPrice represents the max and min prices in a day
@@ -50,12 +59,13 @@ type Forecast struct {
 	sellPrice uint32
 	buyPrices [12]uint32
 
-	Patterns []Pattern
-	MaxMin   [12]DayPrice
+	Patterns      []Pattern
+	MaxMin        [12]DayPrice
+	Probabilities map[PatternType]float64
 }
 
 // NewForecast returns a Forecasts
-func NewForecast(sellPrice uint32, buyPrices [12]uint32) (*Forecast, error) {
+func NewForecast(sellPrice uint32, buyPrices [12]uint32, previousWeek *Forecast) (*Forecast, error) {
 	if sellPrice < 90 || sellPrice > 110 {
 		return nil, ErrSellPrice
 	}
@@ -71,7 +81,7 @@ func NewForecast(sellPrice uint32, buyPrices [12]uint32) (*Forecast, error) {
 		buyPrices: buyPrices,
 	}
 
-	f.runForecast()
+	f.runForecast(previousWeek)
 
 	return &f, nil
 }
@@ -542,10 +552,11 @@ func (f *Forecast) genSmallSpikePatterns() {
 }
 
 // runForecast generates all patterns that could match and gets the max and min possible price per day
-func (f *Forecast) runForecast() {
+func (f *Forecast) runForecast(previousWeek *Forecast) {
 	// Make sure everything is empty
 	f.Patterns = []Pattern{}
 	f.MaxMin = [12]DayPrice{}
+	f.Probabilities = map[PatternType]float64{}
 
 	// Generate all patterns
 	f.genRandomPatterns()
@@ -553,15 +564,45 @@ func (f *Forecast) runForecast() {
 	f.genFallingPatterns()
 	f.genSmallSpikePatterns()
 
-	// Calc max and min values for each day
+	// Calc max and min values for each day and keep track possible pattern types
+	patterns := map[PatternType]bool{}
+
 	for i := range f.MaxMin {
 		f.MaxMin[i].Min = math.MaxUint32
 	}
 
 	for i := range f.Patterns {
+		patterns[f.Patterns[i].Type] = true
+
 		for j := range f.Patterns[i].Prices {
 			f.MaxMin[j].Max = maxUint32(f.MaxMin[j].Max, f.Patterns[i].Prices[j].Max)
 			f.MaxMin[j].Min = minUint32(f.MaxMin[j].Min, f.Patterns[i].Prices[j].Min)
 		}
+	}
+
+	// Calc probabilities
+	if previousWeek != nil {
+		for pattern := range patterns {
+			for prevPattern, prevProb := range previousWeek.Probabilities {
+				f.Probabilities[pattern] += (ProbabilityTable[prevPattern][pattern] * prevProb)
+			}
+		}
+	} else {
+		for pattern := range patterns {
+			for _, patProb := range ProbabilityTable {
+				f.Probabilities[pattern] += patProb[pattern]
+			}
+		}
+	}
+
+	// Normalize probabilities
+	var total float64 = 0
+
+	for _, p := range f.Probabilities {
+		total += p
+	}
+
+	for p := range f.Probabilities {
+		f.Probabilities[p] /= total
 	}
 }

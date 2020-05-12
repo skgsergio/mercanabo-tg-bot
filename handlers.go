@@ -498,7 +498,55 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	// Gen all matching patterns
 	var forecast *Forecast = nil
 	if islandPrice != nil && islandPrice.Bells > 0 {
-		forecast, err = NewForecast(islandPrice.Bells, buyPrices)
+		// Get last week forecast in order to be more accurate
+		var pwForecast *Forecast = nil
+
+		pwTime := time.Now().AddDate(0, 0, -7)
+
+		pwPrices, err := db.GetUserWeekPrices(m.Sender, m.Chat, pwTime)
+		if err != nil {
+			rm := t.reply(m, texts.InternalError)
+			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+			return
+		}
+
+		pwIslandPrice, err := db.GetUserIslandPriceByDate(m.Sender, m.Chat, pwTime)
+		if err != nil {
+			rm := t.reply(m, texts.InternalError)
+			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+			return
+		}
+
+		// If last week there were no prices or no island price we skip the last week forecast
+		if len(pwPrices) > 0 && islandPrice != nil && islandPrice.Bells > 0 {
+			pwTimes := [12]time.Time{}
+			pwBuyPrices := [12]uint32{}
+
+			pwInitDate := groupNow.With(pwTime.In(groupNow.TimeLocation)).BeginningOfWeek().Add(time.Hour * 24)
+
+			for i := 0; i < 12; i++ {
+				pwTimes[i] = pwInitDate.Add(time.Hour * 12 * time.Duration(i))
+			}
+
+			for _, price := range pwPrices {
+				for i := range pwTimes {
+					if price.Date.Equal(pwTimes[i]) {
+						pwBuyPrices[i] = price.Bells
+						break
+					}
+				}
+			}
+
+			pwForecast, err = NewForecast(pwIslandPrice.Bells, pwBuyPrices, nil)
+			if err != nil {
+				rm := t.reply(m, texts.InternalError)
+				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+				return
+			}
+		}
+
+		// Get this week forecast
+		forecast, err = NewForecast(islandPrice.Bells, buyPrices, pwForecast)
 		if err != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
@@ -522,30 +570,27 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	} else if len(forecast.Patterns) == 0 {
 		caption += texts.Patterns.Unknown
 	} else {
-		pats := map[PatternType]bool{
-			Random:     false,
-			BigSpike:   false,
-			Falling:    false,
-			SmallSpike: false,
-		}
+		caption += texts.Patterns.Matching
 
-		for _, p := range forecast.Patterns {
-			pats[p.Type] = true
-		}
+		for pat, prob := range forecast.Probabilities {
+			var pName string
+			var pDesc string
 
-		caption += texts.Patterns.Matching + "\n"
+			if pat == Random {
+				pName = texts.Patterns.Random.Name
+				pDesc = texts.Patterns.Random.Desc
+			} else if pat == BigSpike {
+				pName = texts.Patterns.BigSpike.Name
+				pDesc = texts.Patterns.BigSpike.Desc
+			} else if pat == Falling {
+				pName = texts.Patterns.Falling.Name
+				pDesc = texts.Patterns.Falling.Desc
+			} else if pat == SmallSpike {
+				pName = texts.Patterns.SmallSpike.Name
+				pDesc = texts.Patterns.SmallSpike.Desc
+			}
 
-		if pats[Random] {
-			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.Random.Name, texts.Patterns.Random.Desc)
-		}
-		if pats[BigSpike] {
-			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.BigSpike.Name, texts.Patterns.BigSpike.Desc)
-		}
-		if pats[Falling] {
-			caption += fmt.Sprintf("- <b>%s</b>: %s\n", texts.Patterns.Falling.Name, texts.Patterns.Falling.Desc)
-		}
-		if pats[SmallSpike] {
-			caption += fmt.Sprintf("- <b>%s</b>: %s", texts.Patterns.SmallSpike.Name, texts.Patterns.SmallSpike.Desc)
+			caption += fmt.Sprintf("\n- <b>%s</b> <i>(%.2f%%)</i>: %s", pName, prob*100, pDesc)
 		}
 	}
 
