@@ -555,7 +555,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	}
 
 	// Generate chart
-	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, forecast, groupNow.TimeLocation, true)
+	chart, err := PricesChart(user.String(), &times, &buyPrices, owned.Bells, forecast, groupNow.TimeLocation)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})

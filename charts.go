@@ -27,10 +27,8 @@ import (
 )
 
 // PricesChart returns a chart given a slice of prices
-func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBells uint32, forecast *Forecast, location *time.Location, addRangeTitle bool) (*bytes.Buffer, error) {
-	if addRangeTitle {
-		title += fmt.Sprintf(" | %s - %s", times[0].Format("2006-01-02"), times[len(times)-1].Format("2006-01-02"))
-	}
+func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBells uint32, forecast *Forecast, location *time.Location) (*bytes.Buffer, error) {
+	title += fmt.Sprintf(" | %s - %s", times[0].Format("2006-01-02"), times[len(times)-1].Format("2006-01-02"))
 
 	// Graph series slice
 	graphSeries := []chart.Series{}
@@ -149,11 +147,13 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 		}
 	}
 
-	YRange.Max += 5
-	YRange.Min -= 5
+	if YRange.Min == YRange.Max {
+		YRange.Max += 5
+		YRange.Min -= 5
 
-	if YRange.Min < 0 {
-		YRange.Min = 0
+		if YRange.Min < 0 {
+			YRange.Min = 0
+		}
 	}
 
 	// Create ticks for x axis
