@@ -132,8 +132,6 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 	// When there is only one data point in the graph the library enters in an infinite loop state that is
 	// related to the Y axis range generation. In order to avoid this we just create our own range for the
 	// Y axis. Will report the bug.
-	//
-	// Additionally we use this to create a bit of top and bottom padding.
 	YRange := &chart.ContinuousRange{
 		Max: -math.MaxFloat64,
 		Min: math.MaxFloat64,
@@ -151,8 +149,8 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 		}
 	}
 
-	YRange.Max += 10
-	YRange.Min -= 10
+	YRange.Max += 5
+	YRange.Min -= 5
 
 	if YRange.Min < 0 {
 		YRange.Min = 0
@@ -176,6 +174,11 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 		Title:  title,
 		TitleStyle: chart.Style{
 			FontSize: 12,
+		},
+		Background: chart.Style{
+			Padding: chart.Box{
+				Top: 35,
+			},
 		},
 		XAxis: chart.XAxis{
 			Ticks: ticks,
