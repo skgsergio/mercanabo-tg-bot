@@ -174,10 +174,13 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 		Title:  title,
 		TitleStyle: chart.Style{
 			FontSize: 12,
+			Padding: chart.Box{
+				Top: 5,
+			},
 		},
 		Background: chart.Style{
 			Padding: chart.Box{
-				Top: 35,
+				Top: 30,
 			},
 		},
 		XAxis: chart.XAxis{
