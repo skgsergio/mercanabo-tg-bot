@@ -18,6 +18,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/wcharczuk/go-chart"
@@ -55,7 +56,7 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 	}
 
 	// Create prediction series if any
-	if len(forecast.Patterns) > 0 {
+	if forecast != nil && len(forecast.Patterns) > 0 {
 		predMinSeries := chart.TimeSeries{
 			Style: chart.Style{
 				StrokeColor:     chart.ColorOrange,
@@ -128,19 +129,33 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 
 	// Ok, here is the deal: you walk away and act as if you didn't see this, and I explain to you this hack.
 	//
-	// When there is only one data point in the graph the library enters in an infinite loop state that seems
-	// related to the Y axis range generation. In order to avoid this we just create a phantom series (transparent)
-	// with a couple of data points with values +5 and -5 of the unique datapoint. Will report the bug.
-	if len(forecast.Patterns) == 0 && len(priceSeries.XValues) == 1 {
-		phantomSeries := chart.TimeSeries{
-			Style: chart.Style{
-				StrokeColor: chart.ColorTransparent,
-			},
-			XValues: []time.Time{times[0], times[1]},
-			YValues: []float64{priceSeries.YValues[0] + 5, priceSeries.YValues[0] - 5},
-		}
+	// When there is only one data point in the graph the library enters in an infinite loop state that is
+	// related to the Y axis range generation. In order to avoid this we just create our own range for the
+	// Y axis. Will report the bug.
+	//
+	// Additionally we use this to create a bit of top and bottom padding.
+	YRange := &chart.ContinuousRange{
+		Max: -math.MaxFloat64,
+		Min: math.MaxFloat64,
+	}
 
-		graphSeries = append(graphSeries, phantomSeries)
+	for _, price := range priceSeries.YValues {
+		YRange.Max = math.Max(YRange.Max, price)
+		YRange.Min = math.Min(YRange.Min, price)
+	}
+
+	if forecast != nil && len(forecast.Patterns) > 0 {
+		for _, price := range forecast.MaxMin {
+			YRange.Max = math.Max(YRange.Max, float64(price.Max))
+			YRange.Min = math.Min(YRange.Min, float64(price.Min))
+		}
+	}
+
+	YRange.Max += 10
+	YRange.Min -= 10
+
+	if YRange.Min < 0 {
+		YRange.Min = 0
 	}
 
 	// Create ticks for x axis
@@ -171,7 +186,8 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 			},
 		},
 		YAxis: chart.YAxis{
-			Name: texts.Bells,
+			Name:  texts.Bells,
+			Range: YRange,
 		},
 		Series: graphSeries,
 	}
