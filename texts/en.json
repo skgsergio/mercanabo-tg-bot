@@ -1,0 +1,98 @@
+{
+  "group_only": "This bot can be only used in groups.",
+  "join_text": "Mercanabo is now available in this group.\nThe timezone is <code>%v</code>\n\nUse /%v to know how this bot works.",
+  "internal_error": "Oops! An internal error has occurred.",
+  "invalid_parameters": "Valid parameters for this command:",
+  "unprivileged": "You don't have permissions to do that.",
+  "bells": "bells",
+  "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  "days_short": ["Sun.", "Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat."],
+  "patterns": {
+    "random": {
+      "name": "Random",
+      "desc": "max price peak 0.9~1.4x."
+    },
+    "big_spike": {
+      "name": "Big spike",
+      "desc": "2nd half-day of rising will be more or equal to 1.4x, 3rd half-day will be the max price  2~6x."
+    },
+    "falling": {
+      "name": "Falling",
+      "desc": "100% losses."
+    },
+    "small_spike": {
+      "name": "Small spike",
+      "desc": "2nd half-day of rising will be less or equal to 1.4x (it can be less than the 1st half-day and you will see a double peak), 4th half-day will be the max price 1.4~2x."
+    },
+    "matching": "Possible patterns:",
+    "unknown": "The pattern could not be determined.",
+    "no_island_price": "The purchase price of your island is unknown, predictions cannot be made."
+  },
+  "help": {
+    "cmd": "help",
+    "desc": "Shows this help. It was obvious, wasn't it?",
+    "available_cmds": "Available commands:"
+  },
+  "admin": {
+    "cmd": "admin",
+    "desc": "Shows commands for administrators",
+    "available_cmds": "Available commands:"
+  },
+  "buy": {
+    "cmd": "buy",
+    "params": "[quantity] [purchase price: 90-110] [island price (optional): 90-110]",
+    "desc": "Saves the number of turnips you have purchased and its price. If you have bought them outside your island, put the purchase price of your island as a third parameter.",
+    "saved": "You bought <b>%v</b> turnips at <b>%v</b> bells/unit.",
+    "changed": "I change that! You bought <b>%v</b> turnips at <b>%v</b> bells/unit instead of <b>%v</b> turnips at <b>%v</b> bells/unit.",
+    "units_mod_ten": "Quantity is not multiple of 10, please check the quantity you bought and try again."
+  },
+  "island_price": {
+    "cmd": "islandprice",
+    "params": "[purchase price of your island: 90-110]",
+    "desc": "Saves the purchase price of your island. If you have bought on another island and used the <code>/%s</code> command without indicating the price of your island, you can change it with this command.",
+    "saved": "The purchase price of your island is <b>%v</b> bells/unit.",
+    "changed": "I change that! The purchase price of your island is <b>%v</b> bells/unit instead of <b>%v</b> bells/unit."
+  },
+  "sell": {
+    "cmd": "sell",
+    "params": "[price: 0-660] [optional date: YYYY-MM-DD AM/PM]",
+    "desc": "Saves the purchase price in Mini Nook, if a date is not specified it will be the current one. To add or change the price of a previous day, specify a date.",
+    "saved": "The sell price on your island is <b>%v</b> bells dated <b>%v</b>.",
+    "changed": "I change that! The sell price on your island is <b>%v</b> bells dated <b>%v</b> instead of <b>%v</b> bells.",
+    "invalid_date": "The date you entered does not comply with the format <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>",
+    "no_market_today": "Day <b>%s</b> is the purchase day (<b>%s</b>), the stalk market is closed."
+  },
+  "list": {
+    "cmd": "list",
+    "desc": "Lists group current prices.",
+    "owned": "This week %v has bought <b>%v</b> turnips at <b>%v</b> bells/unit.",
+    "prices": "Sell prices with date <b>%v</b>:",
+    "no_prices": "There are no sell prices with date <b>%v</b>."
+  },
+  "chart": {
+    "cmd": "graph",
+    "desc": "Shows your price chart for this week with the patterns and prices prediction.",
+    "no_prices": "You have no prices registered this week."
+  },
+  "turnips": {
+    "cmd": "turnips",
+    "desc": "List group members owned turnips.",
+    "owneds": "List of turnips per user:",
+    "no_owneds": "Nobody has turnips."
+  },
+  "delete": {
+    "cmd": "delete",
+    "params": "[seconds: 0-30]",
+    "desc": "Number of seconds until the bot confirmation messages are deleted, if the bot is admin then the user command will be deleted too. Specifying 0 disables the deletion.",
+    "done": "From now on the messages will be deleted in <b>%v</b> seconds. Starting with this one.",
+    "disabled": "Message deletion has been disabled."
+
+  },
+  "changetz": {
+    "cmd": "timezone",
+    "params": "[time zone]",
+    "desc": "Change group time zone (daylight saving time is performed automatically). See <code>TZ database name</code>: %v",
+    "changed": "Group timezone has been changed from <b>%v</b> to <b>%v</b>.\n\nThis change makes all group previous data invalid.\nIf this was an error you can change it back using <code>/%v %v</code> and all the previous data will be valid again.",
+    "invalid": "Invalid timezone <b>%v</b>."
+  }
+}

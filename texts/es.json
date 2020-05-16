@@ -92,7 +92,7 @@
     "cmd": "horario",
     "params": "[zona horaria]",
     "desc": "Indica la zona horaria del grupo (el horario de verano es automático). Ver <code>TZ database name</code>: %v",
-    "changed": "La zona horaria del grupo ha sido cambiada de <b>%v</b> a <b>%v</b>.\n\nEste cambio hará que los datos anteriores de este grupo sean inválidos\nSi ha sido un error puedes revertir los cambios escribiendo <code>/%v %v</code>.",
+    "changed": "La zona horaria del grupo ha sido cambiada de <b>%v</b> a <b>%v</b>.\n\nEste cambio hará que los datos anteriores de este grupo sean inválidos.\nSi ha sido un error puedes revertir los cambios escribiendo <code>/%v %v</code> y los datos volverán a ser válidos.",
     "invalid": "La zona horaria <b>%v</b> no es válida."
   }
 }
