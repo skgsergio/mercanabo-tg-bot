@@ -59,7 +59,7 @@
     "desc": "Saves the purchase price in Mini Nook, if a date is not specified it will be the current one. To add or change the price of a previous day, specify a date.",
     "saved": "The sell price on your island is <b>%v</b> bells dated <b>%v</b>.",
     "changed": "I change that! The sell price on your island is <b>%v</b> bells dated <b>%v</b> instead of <b>%v</b> bells.",
-    "invalid_date": "The date you entered does not comply with the format <code>YYYY-MM-DD AM/PM</code>: <b>%v<b>",
+    "invalid_date": "The date you entered does not comply with the format <code>YYYY-MM-DD AM/PM</code>: <b>%v</b>",
     "no_market_today": "Day <b>%s</b> is the purchase day (<b>%s</b>), the stalk market is closed."
   },
   "list": {
