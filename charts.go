@@ -140,6 +140,11 @@ func PricesChart(title string, times *[12]time.Time, prices *[12]uint32, ownedBe
 		YRange.Min = math.Min(YRange.Min, price)
 	}
 
+	if ownedBells != 0 {
+		YRange.Max = math.Max(YRange.Max, float64(ownedBells))
+		YRange.Min = math.Min(YRange.Min, float64(ownedBells))
+	}
+
 	if forecast != nil && len(forecast.Patterns) > 0 {
 		for _, price := range forecast.MaxMin {
 			YRange.Max = math.Max(YRange.Max, float64(price.Max))
