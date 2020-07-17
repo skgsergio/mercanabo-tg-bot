@@ -199,7 +199,7 @@ func (t *Telegram) cleanupChatMsgs(chat *tb.Chat, msgs []*tb.Message) {
 			continue
 		}
 
-		// Chech the message belongs to the chat
+		// Check the message belongs to the chat
 		if m.Chat.ID != chat.ID {
 			log.Error().Str("module", "telegram").Int64("chat_id", chat.ID).Int64("m_chat_id", m.Chat.ID).Msg("message to delete doesn't belong the chat")
 			continue
