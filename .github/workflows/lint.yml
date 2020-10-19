@@ -27,7 +27,7 @@ jobs:
           go-version: 1.14
 
       - name: Add Go bin dir to PATH
-        run: echo "::add-path::$(go env GOPATH)/bin"
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Install tools
         run: go get -u golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow golang.org/x/lint/golint honnef.co/go/tools/cmd/staticcheck github.com/kisielk/errcheck github.com/securego/gosec/cmd/gosec
@@ -40,7 +40,7 @@ jobs:
         run: |
           golintout="$(gofmt -s -l .)";
           if [ -n "$golintout" ]; then
-            awk '{ print $0": format check failed" }' <<< $golintout
+            awk '{ print "::error file="$0"::format check failed" }' <<< $golintout
             exit 1
           fi
         shell: bash
