@@ -19,7 +19,7 @@ import (
 	"errors"
 	"time"
 
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/tucnak/telebot.v3"
 
 	"github.com/jinzhu/gorm"
 
@@ -83,7 +83,7 @@ func (d *Database) GetGroup(c *tb.Chat) (*Group, error) {
 func (d *Database) GetUser(u *tb.User) (*User, error) {
 	user := &User{}
 
-	err := d.DB.Where(&User{ID: int64(u.ID)}).First(&user).Error
+	err := d.DB.Where(&User{ID: u.ID}).First(&user).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		log.Error().Str("module", "database").Err(err).Msg("error getting user")
@@ -93,7 +93,7 @@ func (d *Database) GetUser(u *tb.User) (*User, error) {
 	isNew := d.DB.NewRecord(user)
 
 	if isNew {
-		user.ID = int64(u.ID)
+		user.ID = u.ID
 		user.FirstName = u.FirstName
 		user.LastName = u.LastName
 		user.Username = u.Username

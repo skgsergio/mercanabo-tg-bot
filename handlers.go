@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/tucnak/telebot.v3"
 
 	"github.com/rs/zerolog/log"
 )
@@ -31,51 +31,61 @@ const (
 )
 
 // handleStart triggers when /start is sent on private
-func (t *Telegram) handleStart(m *tb.Message) {
+func (t *Telegram) handleStart(ctx tb.Context) error {
+	m := ctx.Message()
 	if !m.Private() {
-		return
+		return nil
 	}
 
 	t.send(m.Chat, texts.GroupOnly)
+
+	return nil
 }
 
 // handleAddedToGroup triggers when the bot is added to a group
-func (t *Telegram) handleAddedToGroup(m *tb.Message) {
+func (t *Telegram) handleAddedToGroup(ctx tb.Context) error {
+	m := ctx.Message()
 	log.Info().Str("module", "telegram").Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).Msg("added to group")
 
 	// Register the group in the DB
 	group, err := db.GetGroup(m.Chat)
 	if err != nil {
 		log.Error().Str("module", "telegram").Err(err).Msg("error getting or creating group")
-		return
+		return nil
 	}
 
 	// Send welcome text
 	t.send(m.Chat, fmt.Sprintf(texts.JoinText, group.TZ, texts.Help.Cmd))
+
+	return nil
 }
 
 // handleGroupMigration triggers when a group is migrated and its ID changes (converted to super-group)
-func (t *Telegram) handleGroupMigration(from, to int64) {
+func (t *Telegram) handleGroupMigration(ctx tb.Context) error {
+	from, to := ctx.Migration()
 	log.Info().Str("module", "telegram").Int64("from_chat_id", from).Int64("to_chat_id", to).Msg("group migrated")
 
 	err := db.ChangeGroupID(from, to)
 	if err != nil {
 		log.Error().Str("module", "telegram").Err(err).Msg("error updating migrated group")
-		return
+		return nil
 	}
+
+	return nil
 }
 
 // handleHelpCmd triggers when the help cmd is sent to a group
-func (t *Telegram) handleHelpCmd(m *tb.Message) {
+func (t *Telegram) handleHelpCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -93,19 +103,22 @@ func (t *Telegram) handleHelpCmd(m *tb.Message) {
 
 	t.send(m.Chat, strings.Join(helpLines, "\n"), tb.NoPreview)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+
+	return nil
 }
 
 // handleAdminCmd triggers when the admin cmd is sent to a group
-func (t *Telegram) handleAdminCmd(m *tb.Message) {
+func (t *Telegram) handleAdminCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -114,13 +127,13 @@ func (t *Telegram) handleAdminCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
 		rm := t.reply(m, texts.Unprivileged)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	helpLines := []string{
@@ -131,19 +144,22 @@ func (t *Telegram) handleAdminCmd(m *tb.Message) {
 
 	t.send(m.Chat, strings.Join(helpLines, "\n"), tb.NoPreview)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+
+	return nil
 }
 
 // handleBuyCmd triggers when the buy cmd is sent to a group
-func (t *Telegram) handleBuyCmd(m *tb.Message) {
+func (t *Telegram) handleBuyCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -152,7 +168,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if len(parameters) != 2 && len(parameters) != 3 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	units, err := parseUint32(parameters[0])
@@ -160,13 +176,13 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if err != nil || err2 != nil || bells < 90 || bells > 110 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	if math.Mod(float64(units), 10) != 0 {
 		rm := t.reply(m, texts.Buy.UnitsModTen)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	islandPrice := bells
@@ -175,7 +191,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 		if err != nil || islandPrice < 90 || islandPrice > 110 {
 			rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Buy.Params))
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 	}
 
@@ -184,7 +200,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var msgTxt1 string
@@ -199,7 +215,7 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var msgTxt2 string
@@ -212,19 +228,22 @@ func (t *Telegram) handleBuyCmd(m *tb.Message) {
 	// Send reply
 	rm := t.reply(m, fmt.Sprintf("%s\n\n%s", msgTxt1, msgTxt2))
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+
+	return nil
 }
 
 // handleIslandPriceCmd triggers when the islandprice cmd is sent to a group
-func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
+func (t *Telegram) handleIslandPriceCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -233,14 +252,14 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	if len(parameters) != 1 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.IslandPrice.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	islandPrice, err := parseUint32(parameters[0])
 	if err != nil || islandPrice < 90 || islandPrice > 110 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.IslandPrice.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Store island price
@@ -248,7 +267,7 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var msgTxt string
@@ -260,19 +279,22 @@ func (t *Telegram) handleIslandPriceCmd(m *tb.Message) {
 
 	rm := t.reply(m, msgTxt)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+
+	return nil
 }
 
 // handleSellCmd triggers when the sell cmd is sent to a group
-func (t *Telegram) handleSellCmd(m *tb.Message) {
+func (t *Telegram) handleSellCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -281,14 +303,14 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 	if len(parameters) != 1 && len(parameters) != 3 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Sell.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	bells, err := parseUint32(parameters[0])
 	if err != nil || bells > 660 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Sell.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Save the price
@@ -304,12 +326,12 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 			if err == ErrBuyDay {
 				rm := t.reply(m, fmt.Sprintf(texts.Sell.NoMarketToday, date, texts.Days[turnipSellDay]))
 				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-				return
+				return nil
 			}
 
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 	} else {
 		new, oldBells, date, err = db.SaveUserPrice(m.Sender, m.Chat, bells, strings.Join(parameters[1:], " "))
@@ -317,18 +339,18 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 			if err == ErrDateParse {
 				rm := t.reply(m, fmt.Sprintf(texts.Sell.InvalidDate, strings.Join(parameters[1:], " ")))
 				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-				return
+				return nil
 			}
 
 			if err == ErrBuyDay {
 				rm := t.reply(m, fmt.Sprintf(texts.Sell.NoMarketToday, date, texts.Days[turnipSellDay]))
 				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-				return
+				return nil
 			}
 
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 	}
 
@@ -339,19 +361,22 @@ func (t *Telegram) handleSellCmd(m *tb.Message) {
 		rm = t.reply(m, fmt.Sprintf(texts.Sell.Changed, bells, date, oldBells))
 	}
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+
+	return nil
 }
 
 // handleListCmd triggers when the list cmd is sent to a group
-func (t *Telegram) handleListCmd(m *tb.Message) {
+func (t *Telegram) handleListCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -359,7 +384,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	cost := int64(owned.Units * owned.Bells)
@@ -368,7 +393,7 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var reply string
@@ -415,19 +440,22 @@ func (t *Telegram) handleListCmd(m *tb.Message) {
 
 	t.send(m.Chat, reply)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+
+	return nil
 }
 
 // handleChartCmd triggers when the chart cmd is sent to a group
-func (t *Telegram) handleChartCmd(m *tb.Message) {
+func (t *Telegram) handleChartCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -436,14 +464,14 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	groupNow, err := group.NowConfig()
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Get prices
@@ -451,13 +479,13 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	if len(prices) == 0 {
 		rm := t.reply(m, texts.Chart.NoPrices)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Get owned
@@ -465,7 +493,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Get island price
@@ -473,7 +501,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Craft data to have a good looking graph when data is missing
@@ -507,14 +535,14 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		if errp != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 
 		pwIslandPrice, errp := db.GetUserIslandPriceByDate(m.Sender, m.Chat, pwTime)
 		if errp != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 
 		// If last week there were no prices or no island price we skip the last week forecast
@@ -541,7 +569,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 			if err != nil {
 				rm := t.reply(m, texts.InternalError)
 				t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-				return
+				return nil
 			}
 		}
 
@@ -550,7 +578,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 		if err != nil {
 			rm := t.reply(m, texts.InternalError)
 			t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-			return
+			return nil
 		}
 	}
 
@@ -559,7 +587,7 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Add pattern info as image caption
@@ -596,19 +624,22 @@ func (t *Telegram) handleChartCmd(m *tb.Message) {
 
 	t.send(m.Chat, &tb.Photo{File: tb.FromReader(chart), Caption: caption})
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+
+	return nil
 }
 
 // handleTurnipsCmd triggers when the turnips cmd is sent to a group
-func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
+func (t *Telegram) handleTurnipsCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -617,7 +648,7 @@ func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var reply string
@@ -645,19 +676,22 @@ func (t *Telegram) handleTurnipsCmd(m *tb.Message) {
 
 	t.send(m.Chat, reply)
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m})
+
+	return nil
 }
 
 // handleDeleteCmd triggers when the delete cmd is sent to a group
-func (t *Telegram) handleDeleteCmd(m *tb.Message) {
+func (t *Telegram) handleDeleteCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -666,13 +700,13 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
 		rm := t.reply(m, texts.Unprivileged)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Validate the parameters
@@ -680,21 +714,21 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 	if len(parameters) != 1 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	seconds, err := parseUint8(parameters[0])
 	if err != nil || seconds > 30 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	err = db.ChangeGroupDeleteSeconds(m.Chat, seconds)
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	var rm *tb.Message
@@ -704,19 +738,22 @@ func (t *Telegram) handleDeleteCmd(m *tb.Message) {
 		rm = t.reply(m, texts.Delete.Disabled)
 	}
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+
+	return nil
 }
 
 // handleDChangeTZCmd triggers when the change TZ cmd is sent to a group
-func (t *Telegram) handleChangeTZCmd(m *tb.Message) {
+func (t *Telegram) handleChangeTZCmd(ctx tb.Context) error {
+	m := ctx.Message()
 	if m.Private() {
 		t.send(m.Chat, texts.GroupOnly)
-		return
+		return nil
 	}
 
 	log.Info().
 		Str("module", "telegram").
 		Int64("chat_id", m.Chat.ID).Str("chat_title", m.Chat.Title).
-		Int("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
+		Int64("user_id", m.Sender.ID).Str("user_first_name", m.Sender.FirstName).
 		Str("user_last_name", m.Sender.LastName).Str("user_username", m.Sender.Username).
 		Msg(m.Text)
 
@@ -725,13 +762,13 @@ func (t *Telegram) handleChangeTZCmd(m *tb.Message) {
 	if err != nil {
 		rm := t.reply(m, texts.InternalError)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	if !groupAdmin && !t.isSuperAdmin(m.Sender) {
 		rm := t.reply(m, texts.Unprivileged)
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	// Validate the parameters
@@ -739,7 +776,7 @@ func (t *Telegram) handleChangeTZCmd(m *tb.Message) {
 	if len(parameters) != 1 {
 		rm := t.reply(m, fmt.Sprintf("%s %s", texts.InvalidParams, texts.Delete.Params))
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	oldTZ, err := db.ChangeGroupTZ(m.Chat, parameters[0])
@@ -753,9 +790,11 @@ func (t *Telegram) handleChangeTZCmd(m *tb.Message) {
 		}
 
 		t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
-		return
+		return nil
 	}
 
 	rm := t.reply(m, fmt.Sprintf(texts.ChangeTZ.Changed, oldTZ, parameters[0], texts.ChangeTZ.Cmd, oldTZ))
 	t.cleanupChatMsgs(m.Chat, []*tb.Message{m, rm})
+
+	return nil
 }

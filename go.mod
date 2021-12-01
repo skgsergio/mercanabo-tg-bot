@@ -12,5 +12,5 @@ require (
 	github.com/rs/zerolog v1.18.0
 	github.com/wcharczuk/go-chart v2.0.2-0.20191206192251-962b9abdec2b+incompatible
 	golang.org/x/image v0.0.0-20200119044424-58c23975cae1 // indirect
-	gopkg.in/tucnak/telebot.v2 v2.0.0-20200329125927-3458aeb2e7be
+	gopkg.in/tucnak/telebot.v3 v3.0.0-20211126232936-7f936709f3ee
 )
