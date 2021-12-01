@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/tucnak/telebot.v3"
 
 	"github.com/rs/zerolog/log"
 )
@@ -35,7 +35,7 @@ func NewBot(token string) (*Telegram, error) {
 	bot, err := tb.NewBot(tb.Settings{
 		Token:  token,
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
-		Reporter: func(err error) {
+		OnError: func(err error, _ tb.Context) {
 			log.Error().Str("module", "telegram").Err(err).Msg("telebot internal error")
 		},
 	})
@@ -44,7 +44,7 @@ func NewBot(token string) (*Telegram, error) {
 		return nil, err
 	}
 
-	log.Info().Str("module", "telegram").Int("id", bot.Me.ID).Str("name", bot.Me.FirstName).Str("username", bot.Me.Username).Msg("connected to telegram")
+	log.Info().Str("module", "telegram").Int64("id", bot.Me.ID).Str("name", bot.Me.FirstName).Str("username", bot.Me.Username).Msg("connected to telegram")
 
 	return &Telegram{bot: bot}, nil
 }
@@ -84,7 +84,7 @@ func (t *Telegram) registerHandlers() {
 
 func (t *Telegram) isSuperAdmin(user *tb.User) bool {
 	for _, uid := range superAdmins {
-		if int64(user.ID) == uid {
+		if user.ID == uid {
 			return true
 		}
 	}
